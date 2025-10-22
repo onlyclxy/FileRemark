@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36603.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WriteRemark", "WriteRemark\WriteRemark.csproj", "{5FD494FA-FF70-48C3-8382-5195C781D97A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "写入文件备注", "写入文件备注\写入文件备注.csproj", "{C7D4E689-6C7A-4FCB-B08E-40B55D6C350C}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{5FD494FA-FF70-48C3-8382-5195C781D97A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5FD494FA-FF70-48C3-8382-5195C781D97A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5FD494FA-FF70-48C3-8382-5195C781D97A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5FD494FA-FF70-48C3-8382-5195C781D97A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C7D4E689-6C7A-4FCB-B08E-40B55D6C350C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C7D4E689-6C7A-4FCB-B08E-40B55D6C350C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C7D4E689-6C7A-4FCB-B08E-40B55D6C350C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C7D4E689-6C7A-4FCB-B08E-40B55D6C350C}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {A9EAD91B-A375-4FDE-A2F6-E09E76746A11}
+	EndGlobalSection
+EndGlobal
