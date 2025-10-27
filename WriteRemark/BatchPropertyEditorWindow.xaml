@@ -174,17 +174,38 @@
             <Border.Effect>
                 <DropShadowEffect BlurRadius="10" ShadowDepth="2" Color="LightGray" Opacity="0.3"/>
             </Border.Effect>
-            <Grid>
-                <TextBlock Text="批量编辑属性" FontSize="18" FontWeight="Bold"
-                           VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="#FF333333" />
-                <Button x:Name="btnTopMost" Width="22" Height="22" Click="BtnTopMost_Click" 
-                        ToolTip="窗口已置顶（点击取消）" Background="Transparent" BorderThickness="0"
-                        HorizontalAlignment="Right" VerticalAlignment="Center"
-                        Cursor="Hand" Padding="2">
-                    <Path x:Name="pathTopMost" Data="M7,15L12,10L17,15H7Z" 
-                          Fill="#FF4CAF50" Stretch="Uniform" Width="12" Height="12" />
-                </Button>
-            </Grid>
+            <StackPanel>
+                <!-- 标题行 -->
+                <Grid>
+                    <TextBlock Text="批量编辑属性" FontSize="18" FontWeight="Bold"
+                               VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="#FF333333" />
+                    <Button x:Name="btnTopMost" Width="22" Height="22" Click="BtnTopMost_Click" 
+                            ToolTip="窗口已置顶（点击取消）" Background="Transparent" BorderThickness="0"
+                            HorizontalAlignment="Right" VerticalAlignment="Center"
+                            Cursor="Hand" Padding="2">
+                        <Path x:Name="pathTopMost" Data="M7,15L12,10L17,15H7Z" 
+                              Fill="#FF4CAF50" Stretch="Uniform" Width="12" Height="12" />
+                    </Button>
+                </Grid>
+                
+                <!-- 操作目录显示 -->
+                <Border Margin="0,8,0,0" Background="#FFF5F5F5" CornerRadius="4" Padding="8,5">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="操作目录：" FontSize="11" Foreground="#FF666666" 
+                                   VerticalAlignment="Center" Margin="0,0,5,0"/>
+                        <TextBox Grid.Column="1" x:Name="txtOperationPath" IsReadOnly="True" 
+                                 Background="Transparent" BorderThickness="0" 
+                                 FontSize="11" Foreground="#FF333333" 
+                                 VerticalAlignment="Center" Padding="0"
+                                 TextWrapping="NoWrap" IsTabStop="False"
+                                 ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}"/>
+                    </Grid>
+                </Border>
+            </StackPanel>
         </Border>
 
         <!-- 工具栏 - 文件批量操作 -->

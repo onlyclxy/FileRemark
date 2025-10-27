@@ -84,6 +84,111 @@ namespace WriteRemark
 
             _fileModels = new ObservableCollection<BatchFilePropertyModel>();
             _folderModels = new ObservableCollection<BatchFolderPropertyModel>();
+            
+            // 设置操作目录显示
+            SetOperationPath(paths);
+        }
+        
+        /// <summary>
+        /// 设置操作目录路径显示
+        /// </summary>
+        private void SetOperationPath(List<string> paths)
+        {
+            if (paths == null || !paths.Any())
+            {
+                txtOperationPath.Text = "无";
+                return;
+            }
+
+            try
+            {
+                // 获取所有路径的父目录
+                var directories = new HashSet<string>();
+                
+                foreach (var path in paths)
+                {
+                    string dir = null;
+                    if (File.Exists(path))
+                    {
+                        dir = Path.GetDirectoryName(path);
+                    }
+                    else if (Directory.Exists(path))
+                    {
+                        dir = Path.GetDirectoryName(path);
+                        // 如果是根目录，直接使用该路径
+                        if (string.IsNullOrEmpty(dir))
+                            dir = path;
+                    }
+                    
+                    if (!string.IsNullOrEmpty(dir))
+                        directories.Add(dir);
+                }
+
+                // 如果所有项目都在同一个目录下
+                if (directories.Count == 1)
+                {
+                    txtOperationPath.Text = directories.First();
+                }
+                else if (directories.Count == 0)
+                {
+                    txtOperationPath.Text = "多个位置";
+                }
+                else
+                {
+                    // 尝试找到共同的父目录
+                    string commonPath = FindCommonPath(directories.ToList());
+                    if (!string.IsNullOrEmpty(commonPath))
+                    {
+                        txtOperationPath.Text = $"{commonPath} (及子目录)";
+                    }
+                    else
+                    {
+                        txtOperationPath.Text = $"多个位置 ({directories.Count} 个目录)";
+                    }
+                }
+            }
+            catch (Exception)
+            {
+                txtOperationPath.Text = "多个位置";
+            }
+        }
+        
+        /// <summary>
+        /// 查找多个路径的共同父目录
+        /// </summary>
+        private string FindCommonPath(List<string> paths)
+        {
+            if (paths == null || !paths.Any())
+                return null;
+                
+            if (paths.Count == 1)
+                return paths[0];
+
+            // 将所有路径分割成部分
+            var pathParts = paths.Select(p => p.Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)).ToList();
+            
+            // 找到最短路径的长度
+            int minLength = pathParts.Min(p => p.Length);
+            
+            // 找到共同的部分
+            var commonParts = new List<string>();
+            for (int i = 0; i < minLength; i++)
+            {
+                string part = pathParts[0][i];
+                if (pathParts.All(p => p[i].Equals(part, StringComparison.OrdinalIgnoreCase)))
+                {
+                    commonParts.Add(part);
+                }
+                else
+                {
+                    break;
+                }
+            }
+            
+            if (commonParts.Count == 0)
+                return null;
+                
+            return string.Join(Path.DirectorySeparatorChar.ToString(), commonParts);
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)

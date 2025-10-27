@@ -86,9 +86,105 @@ namespace WriteRemark
     public class FilePropertyEditor
     {
         /// <summary>
+        /// 【推荐使用】智能编辑器入口 - 自动判断路径类型并打开对应的编辑器
+        /// - 单个文件：打开文件属性编辑器
+        /// - 单个文件夹：打开文件夹属性编辑器
+        /// - 空路径或不存在：返回错误提示
+        /// </summary>
+        /// <param name="path">文件或文件夹路径</param>
+        /// <returns>操作结果信息</returns>
+        public static string ShowEditor(string path)
+        {
+            // 检查路径是否为空
+            if (string.IsNullOrWhiteSpace(path))
+            {
+                return "请提供有效的文件或文件夹路径";
+            }
+
+            // 判断是文件还是文件夹
+            if (File.Exists(path))
+            {
+                // 是文件，使用文件编辑器
+                return ShowFileEditor(path);
+            }
+            else if (Directory.Exists(path))
+            {
+                // 是文件夹，使用文件夹编辑器
+                return ShowFolderEditor(path);
+            }
+            else
+            {
+                return $"路径不存在：{path}";
+            }
+        }
+
+        /// <summary>
+        /// 【推荐使用】智能编辑器入口 - 自动判断单个或批量，并打开对应的编辑器
+        /// - 空列表或null：返回错误提示
+        /// - 单个文件：打开文件属性编辑器
+        /// - 单个文件夹：打开文件夹属性编辑器
+        /// - 多个文件/文件夹：打开批量编辑器
+        /// </summary>
+        /// <param name="paths">文件或文件夹路径列表</param>
+        /// <returns>操作结果信息</returns>
+        public static string ShowEditor(List<string> paths)
+        {
+            // 检查路径列表是否为空
+            if (paths == null || !paths.Any())
+            {
+                return "请提供有效的文件或文件夹路径";
+            }
+
+            // 过滤出有效路径
+            var validPaths = paths.Where(p => !string.IsNullOrWhiteSpace(p)).ToList();
+            
+            if (!validPaths.Any())
+            {
+                return "请提供有效的文件或文件夹路径";
+            }
+
+            // 分离文件和文件夹
+            var existingFiles = validPaths.Where(File.Exists).ToList();
+            var existingFolders = validPaths.Where(Directory.Exists).ToList();
+
+            int totalCount = existingFiles.Count + existingFolders.Count;
+
+            // 没有有效路径
+            if (totalCount == 0)
+            {
+                return "没有找到有效的文件或文件夹";
+            }
+
+            // 单个路径
+            if (totalCount == 1)
+            {
+                if (existingFiles.Count == 1)
+                {
+                    // 单个文件：使用单文件编辑器
+                    return ShowFileEditor(existingFiles[0]);
+                }
+                else
+                {
+                    // 单个文件夹：使用单文件夹编辑器
+                    return ShowFolderEditor(existingFolders[0]);
+                }
+            }
+            // 多个路径：使用批量编辑器
+            else
+            {
+                var allPaths = new List<string>();
+                allPaths.AddRange(existingFiles);
+                allPaths.AddRange(existingFolders);
+                return ShowBatchEditor(allPaths);
+            }
+        }
+
+        /// <summary>
         /// 显示单文件属性编辑器
         /// </summary>
-        public static string ShowPropertyEditor(string filePath)
+        /// <param name="filePath">文件路径</param>
+        /// <returns>操作结果信息</returns>
+        public static string ShowFileEditor(string filePath)
         {
             if (!File.Exists(filePath))
             {
@@ -103,14 +199,40 @@ namespace WriteRemark
             }
             catch (Exception ex)
             {
-                return $"打开属性编辑器时出错: {ex.Message}";
+                return $"打开文件属性编辑器时出错: {ex.Message}";
             }
         }
 
         /// <summary>
-        /// 显示批量文件属性编辑器（支持文件和文件夹混合）
+        /// 显示单文件夹属性编辑器
         /// </summary>
-        public static string ShowBatchPropertyEditor(List<string> paths)
+        /// <param name="folderPath">文件夹路径</param>
+        /// <returns>操作结果信息</returns>
+        public static string ShowFolderEditor(string folderPath)
+        {
+            if (!Directory.Exists(folderPath))
+            {
+                return "文件夹不存在";
+            }
+
+            try
+            {
+                var editor = new FolderPropertyEditorWindow(folderPath);
+                bool result = editor.ShowDialog() ?? false;
+                return result ? "Success" : "操作已取消";
+            }
+            catch (Exception ex)
+            {
+                return $"打开文件夹属性编辑器时出错: {ex.Message}";
+            }
+        }
+
+        /// <summary>
+        /// 显示批量属性编辑器（支持文件和文件夹混合）
+        /// </summary>
+        /// <param name="paths">文件或文件夹路径列表</param>
+        /// <returns>操作结果信息</returns>
+        public static string ShowBatchEditor(List<string> paths)
         {
             if (paths == null || !paths.Any())
             {
@@ -137,57 +259,35 @@ namespace WriteRemark
             }
         }
 
+        #region 旧版API（保留以兼容旧代码）
+
         /// <summary>
-        /// 智能选择编辑器：
-        /// - 单个文件：使用单文件编辑器
-        /// - 单个文件夹：使用单文件夹编辑器
-        /// - 多个文件/文件夹：使用批量编辑器
+        /// [已过时] 请使用 ShowFileEditor 或 ShowEditor
         /// </summary>
+        [Obsolete("请使用 ShowFileEditor(string) 或 ShowEditor(string) 替代")]
+        public static string ShowPropertyEditor(string filePath)
+        {
+            return ShowFileEditor(filePath);
+        }
+
+        /// <summary>
+        /// [已过时] 请使用 ShowBatchEditor 或 ShowEditor
+        /// </summary>
+        [Obsolete("请使用 ShowBatchEditor(List<string>) 或 ShowEditor(List<string>) 替代")]
+        public static string ShowBatchPropertyEditor(List<string> paths)
+        {
+            return ShowBatchEditor(paths);
+        }
+
+        /// <summary>
+        /// [已过时] 请使用 ShowEditor
+        /// </summary>
+        [Obsolete("请使用 ShowEditor(List<string>) 替代")]
         public static string ShowPropertyEditor(List<string> paths)
         {
-            if (paths == null || !paths.Any())
-            {
-                return "没有提供路径";
-            }
-
-            // 分离文件和文件夹
-            var existingFiles = paths.Where(File.Exists).ToList();
-            var existingFolders = paths.Where(Directory.Exists).ToList();
-
-            int totalCount = existingFiles.Count + existingFolders.Count;
-
-            if (totalCount == 0)
-            {
-                return "没有有效的文件或文件夹";
-            }
-
-            // 单个文件：使用单文件编辑器
-            if (totalCount == 1 && existingFiles.Count == 1)
-            {
-                return ShowPropertyEditor(existingFiles[0]);
-            }
-            // 单个文件夹：使用单文件夹编辑器
-            else if (totalCount == 1 && existingFolders.Count == 1)
-            {
-                try
-                {
-                    var editor = new FolderPropertyEditorWindow(existingFolders[0]);
-                    bool result = editor.ShowDialog() ?? false;
-                    return result ? "Success" : "操作已取消";
-                }
-                catch (Exception ex)
-                {
-                    return $"打开文件夹编辑器时出错: {ex.Message}";
-                }
-            }
-            // 多个文件/文件夹：使用批量编辑器
-            else
-            {
-                var allPaths = new List<string>();
-                allPaths.AddRange(existingFiles);
-                allPaths.AddRange(existingFolders);
-                return ShowBatchPropertyEditor(allPaths);
-            }
+            return ShowEditor(paths);
         }
+
+        #endregion
     }
 }

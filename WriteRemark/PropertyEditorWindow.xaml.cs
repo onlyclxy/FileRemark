@@ -73,6 +73,10 @@ namespace WriteRemark
             _filePath = filePath;
             _textBoxes = new Dictionary<string, TextBox>();
             this.Topmost = _isTopMost;
+            
+            // 设置文件路径显示
+            txtFilePath.Text = filePath;
+            
             LoadFieldConfigs();
             CreateDynamicFields();
             LoadProperties();
