@@ -211,7 +211,7 @@ namespace WriteRemark
                 grid.Children.Add(arrowPanel);
             }
 
-            // 标签
+            // 标签（根据字段类型设置不同颜色）
             var label = new Label
             {
                 Content = field.DisplayName + ":",
@@ -219,7 +219,7 @@ namespace WriteRemark
                 Margin = new Thickness(8, 0, 8, 0),
                 FontSize = 13,
                 FontWeight = FontWeights.Medium,
-                Foreground = new SolidColorBrush(Color.FromRgb(85, 85, 85))
+                Foreground = GetFieldLabelColor(field.FieldName)
             };
             Grid.SetColumn(label, colIndex++);
             grid.Children.Add(label);
@@ -648,6 +648,30 @@ namespace WriteRemark
                     firstVisibleTextBox.SelectAll();
                 }
             }), System.Windows.Threading.DispatcherPriority.Input);
+        }
+
+        /// <summary>
+        /// 根据字段名获取标签颜色
+        /// </summary>
+        private Brush GetFieldLabelColor(string fieldName)
+        {
+            switch (fieldName)
+            {
+                case "LocalizedResourceName":
+                    return new SolidColorBrush(Color.FromRgb(33, 150, 243)); // 蓝色 - 别名
+                case "InfoTip":
+                    return new SolidColorBrush(Color.FromRgb(69, 90, 100)); // 深灰 - 备注
+                case "Prop2":
+                    return new SolidColorBrush(Color.FromRgb(156, 39, 176)); // 紫色 - 标题
+                case "Prop3":
+                    return new SolidColorBrush(Color.FromRgb(255, 152, 0)); // 橙色 - 主题
+                case "Prop4":
+                    return new SolidColorBrush(Color.FromRgb(244, 67, 54)); // 红色 - 作者
+                case "Prop5":
+                    return new SolidColorBrush(Color.FromRgb(76, 175, 80)); // 绿色 - 标记
+                default:
+                    return new SolidColorBrush(Color.FromRgb(85, 85, 85)); // 默认灰色
+            }
         }
     }
 }

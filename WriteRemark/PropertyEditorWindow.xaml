@@ -168,17 +168,19 @@
                 <!-- 文件路径显示 -->
                 <Border Margin="0,8,0,0" Background="#FFF5F5F5" CornerRadius="4" Padding="8,5">
                     <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="文件路径：" FontSize="11" Foreground="#FF666666" 
-                                   VerticalAlignment="Center" Margin="0,0,5,0"/>
-                        <TextBox Grid.Column="1" x:Name="txtFilePath" IsReadOnly="True" 
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <TextBlock Grid.Row="0" Text="文件路径：" FontSize="11" Foreground="#FF666666" 
+                                   Margin="0,0,0,3"/>
+                        <TextBox Grid.Row="1" x:Name="txtFilePath" IsReadOnly="True" 
                                  Background="Transparent" BorderThickness="0" 
                                  FontSize="11" Foreground="#FF333333" 
-                                 VerticalAlignment="Center" Padding="0"
-                                 TextWrapping="NoWrap" IsTabStop="False"
+                                 Padding="0" MinHeight="20" MaxHeight="60"
+                                 TextWrapping="Wrap" 
+                                 VerticalScrollBarVisibility="Auto"
+                                 IsTabStop="False"
                                  ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}"/>
                     </Grid>
                 </Border>

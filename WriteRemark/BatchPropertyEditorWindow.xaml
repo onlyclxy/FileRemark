@@ -158,6 +158,36 @@
                 </DataTrigger>
             </Style.Triggers>
         </Style>
+
+        <!-- 列头颜色样式 -->
+        <Style x:Key="BlueHeader" TargetType="DataGridColumnHeader" BasedOn="{StaticResource {x:Type DataGridColumnHeader}}">
+            <Setter Property="Foreground" Value="#FF2196F3"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+        </Style>
+        <Style x:Key="PurpleHeader" TargetType="DataGridColumnHeader" BasedOn="{StaticResource {x:Type DataGridColumnHeader}}">
+            <Setter Property="Foreground" Value="#FF9C27B0"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+        </Style>
+        <Style x:Key="OrangeHeader" TargetType="DataGridColumnHeader" BasedOn="{StaticResource {x:Type DataGridColumnHeader}}">
+            <Setter Property="Foreground" Value="#FFFF9800"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+        </Style>
+        <Style x:Key="GreenHeader" TargetType="DataGridColumnHeader" BasedOn="{StaticResource {x:Type DataGridColumnHeader}}">
+            <Setter Property="Foreground" Value="#FF4CAF50"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+        </Style>
+        <Style x:Key="CyanHeader" TargetType="DataGridColumnHeader" BasedOn="{StaticResource {x:Type DataGridColumnHeader}}">
+            <Setter Property="Foreground" Value="#FF00BCD4"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+        </Style>
+        <Style x:Key="DarkGrayHeader" TargetType="DataGridColumnHeader" BasedOn="{StaticResource {x:Type DataGridColumnHeader}}">
+            <Setter Property="Foreground" Value="#FF455A64"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+        </Style>
+        <Style x:Key="RedHeader" TargetType="DataGridColumnHeader" BasedOn="{StaticResource {x:Type DataGridColumnHeader}}">
+            <Setter Property="Foreground" Value="#FFF44336"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+        </Style>
     </Window.Resources>
 
     <Grid Margin="15" Background="#FAFAFA">
@@ -191,17 +221,19 @@
                 <!-- 操作目录显示 -->
                 <Border Margin="0,8,0,0" Background="#FFF5F5F5" CornerRadius="4" Padding="8,5">
                     <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="操作目录：" FontSize="11" Foreground="#FF666666" 
-                                   VerticalAlignment="Center" Margin="0,0,5,0"/>
-                        <TextBox Grid.Column="1" x:Name="txtOperationPath" IsReadOnly="True" 
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <TextBlock Grid.Row="0" Text="操作目录：" FontSize="11" Foreground="#FF666666" 
+                                   Margin="0,0,0,3"/>
+                        <TextBox Grid.Row="1" x:Name="txtOperationPath" IsReadOnly="True" 
                                  Background="Transparent" BorderThickness="0" 
                                  FontSize="11" Foreground="#FF333333" 
-                                 VerticalAlignment="Center" Padding="0"
-                                 TextWrapping="NoWrap" IsTabStop="False"
+                                 Padding="0" MinHeight="20" MaxHeight="60"
+                                 TextWrapping="Wrap" 
+                                 VerticalScrollBarVisibility="Auto"
+                                 IsTabStop="False"
                                  ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}"/>
                     </Grid>
                 </Border>
@@ -307,19 +339,23 @@
 
                                     <!-- 标题 -->
                                     <DataGridTextColumn Header="标题" Binding="{Binding Title, UpdateSourceTrigger=PropertyChanged}"
-                                                        Width="150" CellStyle="{StaticResource ErrorCellStyle}"/>
+                                                        Width="150" CellStyle="{StaticResource ErrorCellStyle}"
+                                                        HeaderStyle="{StaticResource BlueHeader}"/>
 
                                     <!-- 主题 -->
                                     <DataGridTextColumn Header="主题" Binding="{Binding Subject, UpdateSourceTrigger=PropertyChanged}"
-                                                        Width="150" CellStyle="{StaticResource ErrorCellStyle}"/>
+                                                        Width="150" CellStyle="{StaticResource ErrorCellStyle}"
+                                                        HeaderStyle="{StaticResource PurpleHeader}"/>
 
                                     <!-- 分级 -->
                                     <DataGridTextColumn Header="分级" Binding="{Binding Rating, UpdateSourceTrigger=PropertyChanged}"
-                                                        Width="80" CellStyle="{StaticResource ErrorCellStyle}"/>
+                                                        Width="80" CellStyle="{StaticResource ErrorCellStyle}"
+                                                        HeaderStyle="{StaticResource OrangeHeader}"/>
 
                                     <!-- 标记 -->
                                     <DataGridTextColumn Header="标记" Binding="{Binding Tags, UpdateSourceTrigger=PropertyChanged}"
-                                                        Width="180" CellStyle="{StaticResource ErrorCellStyle}">
+                                                        Width="180" CellStyle="{StaticResource ErrorCellStyle}"
+                                                        HeaderStyle="{StaticResource GreenHeader}">
                                         <DataGridTextColumn.ElementStyle>
                                             <Style TargetType="TextBlock">
                                                 <Setter Property="ToolTip" Value="多个标记用 ; 分隔"/>
@@ -329,7 +365,8 @@
 
                                     <!-- 类别 -->
                                     <DataGridTextColumn Header="类别" Binding="{Binding Category, UpdateSourceTrigger=PropertyChanged}"
-                                                        Width="180" CellStyle="{StaticResource ErrorCellStyle}">
+                                                        Width="180" CellStyle="{StaticResource ErrorCellStyle}"
+                                                        HeaderStyle="{StaticResource CyanHeader}">
                                         <DataGridTextColumn.ElementStyle>
                                             <Style TargetType="TextBlock">
                                                 <Setter Property="ToolTip" Value="多个类别用 ; 分隔"/>
@@ -339,7 +376,8 @@
 
                                     <!-- 备注 -->
                                     <DataGridTextColumn Header="备注" Binding="{Binding Comment, UpdateSourceTrigger=PropertyChanged}"
-                                                        Width="*" MinWidth="200" CellStyle="{StaticResource ErrorCellStyle}"/>
+                                                        Width="*" MinWidth="200" CellStyle="{StaticResource ErrorCellStyle}"
+                                                        HeaderStyle="{StaticResource DarkGrayHeader}"/>
                                 </DataGrid.Columns>
                             </DataGrid>
                         </Border>
@@ -440,27 +478,33 @@
 
                                     <!-- 别名 (LocalizedResourceName) -->
                                     <DataGridTextColumn Header="别名" Binding="{Binding Alias, UpdateSourceTrigger=PropertyChanged}"
-                                                        Width="150" CellStyle="{StaticResource ErrorCellStyle}"/>
+                                                        Width="150" CellStyle="{StaticResource ErrorCellStyle}"
+                                                        HeaderStyle="{StaticResource BlueHeader}"/>
 
                                     <!-- 备注 (InfoTip) -->
                                     <DataGridTextColumn Header="备注" Binding="{Binding InfoTip, UpdateSourceTrigger=PropertyChanged}"
-                                                        Width="*" MinWidth="200" CellStyle="{StaticResource ErrorCellStyle}"/>
+                                                        Width="*" MinWidth="200" CellStyle="{StaticResource ErrorCellStyle}"
+                                                        HeaderStyle="{StaticResource DarkGrayHeader}"/>
 
                                     <!-- 标题 (Prop2) -->
                                     <DataGridTextColumn Header="标题" Binding="{Binding Title, UpdateSourceTrigger=PropertyChanged}"
-                                                        Width="150" CellStyle="{StaticResource ErrorCellStyle}"/>
+                                                        Width="150" CellStyle="{StaticResource ErrorCellStyle}"
+                                                        HeaderStyle="{StaticResource PurpleHeader}"/>
 
                                     <!-- 主题 (Prop3) -->
                                     <DataGridTextColumn Header="主题" Binding="{Binding Subject, UpdateSourceTrigger=PropertyChanged}"
-                                                        Width="150" CellStyle="{StaticResource ErrorCellStyle}"/>
+                                                        Width="150" CellStyle="{StaticResource ErrorCellStyle}"
+                                                        HeaderStyle="{StaticResource OrangeHeader}"/>
 
                                     <!-- 作者 (Prop4) -->
                                     <DataGridTextColumn Header="作者" Binding="{Binding Author, UpdateSourceTrigger=PropertyChanged}"
-                                                        Width="120" CellStyle="{StaticResource ErrorCellStyle}"/>
+                                                        Width="120" CellStyle="{StaticResource ErrorCellStyle}"
+                                                        HeaderStyle="{StaticResource RedHeader}"/>
 
                                     <!-- 标记 (Prop5) -->
                                     <DataGridTextColumn Header="标记" Binding="{Binding Tags, UpdateSourceTrigger=PropertyChanged}"
-                                                        Width="180" CellStyle="{StaticResource ErrorCellStyle}">
+                                                        Width="180" CellStyle="{StaticResource ErrorCellStyle}"
+                                                        HeaderStyle="{StaticResource GreenHeader}">
                                         <DataGridTextColumn.ElementStyle>
                                             <Style TargetType="TextBlock">
                                                 <Setter Property="ToolTip" Value="多个标记用 ; 分隔"/>

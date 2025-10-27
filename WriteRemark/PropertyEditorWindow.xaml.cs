@@ -209,7 +209,7 @@ namespace WriteRemark
                 grid.Children.Add(arrowPanel);
             }
 
-            // 标签
+            // 标签（根据字段类型设置不同颜色）
             var label = new Label
             {
                 Content = field.DisplayName + ":",
@@ -217,7 +217,7 @@ namespace WriteRemark
                 Margin = new Thickness(8, 0, 8, 0),
                 FontSize = 13,
                 FontWeight = FontWeights.Medium,
-                Foreground = new SolidColorBrush(Color.FromRgb(85, 85, 85))
+                Foreground = GetFieldLabelColor(field.FieldName)
             };
             Grid.SetColumn(label, colIndex++);
             grid.Children.Add(label);
@@ -747,6 +747,30 @@ namespace WriteRemark
             }
 
             return false;
+        }
+
+        /// <summary>
+        /// 根据字段名获取标签颜色
+        /// </summary>
+        private Brush GetFieldLabelColor(string fieldName)
+        {
+            switch (fieldName)
+            {
+                case "Title":
+                    return new SolidColorBrush(Color.FromRgb(33, 150, 243)); // 蓝色 - 标题
+                case "Subject":
+                    return new SolidColorBrush(Color.FromRgb(156, 39, 176)); // 紫色 - 主题
+                case "Rating":
+                    return new SolidColorBrush(Color.FromRgb(255, 152, 0)); // 橙色 - 分级
+                case "Tags":
+                    return new SolidColorBrush(Color.FromRgb(76, 175, 80)); // 绿色 - 标记
+                case "Category":
+                    return new SolidColorBrush(Color.FromRgb(0, 188, 212)); // 青色 - 类别
+                case "Comment":
+                    return new SolidColorBrush(Color.FromRgb(69, 90, 100)); // 深灰 - 备注
+                default:
+                    return new SolidColorBrush(Color.FromRgb(85, 85, 85)); // 默认灰色
+            }
         }
     }
 }
