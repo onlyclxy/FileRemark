@@ -1078,8 +1078,26 @@ namespace WriteRemark
             // 检查是否有错误
             if (modifiedFiles.Any(m => m.HasError) || modifiedFolders.Any(m => m.HasError))
             {
-                var result = MessageBox.Show("有些项目存在验证错误，是否继续保存其他项目？",
-                    "警告", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+                // 收集错误信息
+                var errorMessages = new List<string>();
+                
+                foreach (var file in modifiedFiles.Where(m => m.HasError))
+                {
+                    errorMessages.Add($"文件：{file.FileName} - {file.ErrorMessage}");
+                }
+                
+                foreach (var folder in modifiedFolders.Where(m => m.HasError))
+                {
+                    errorMessages.Add($"文件夹：{folder.FolderName} - {folder.ErrorMessage}");
+                }
+                
+                string errorDetail = string.Join("\n", errorMessages.Take(10));
+                if (errorMessages.Count > 10)
+                    errorDetail += $"\n... 还有 {errorMessages.Count - 10} 个错误";
+                
+                var result = MessageBox.Show(
+                    $"发现以下验证错误：\n\n{errorDetail}\n\n是否继续保存其他有效项目？",
+                    "验证错误", MessageBoxButton.YesNo, MessageBoxImage.Warning);
                 if (result == MessageBoxResult.No)
                     return;
             }
@@ -1101,8 +1119,26 @@ namespace WriteRemark
             // 检查是否有错误
             if (selectedFiles.Any(m => m.HasError) || selectedFolders.Any(m => m.HasError))
             {
-                var result = MessageBox.Show("有些项目存在验证错误，是否继续保存其他项目？",
-                    "警告", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+                // 收集错误信息
+                var errorMessages = new List<string>();
+                
+                foreach (var file in selectedFiles.Where(m => m.HasError))
+                {
+                    errorMessages.Add($"文件：{file.FileName} - {file.ErrorMessage}");
+                }
+                
+                foreach (var folder in selectedFolders.Where(m => m.HasError))
+                {
+                    errorMessages.Add($"文件夹：{folder.FolderName} - {folder.ErrorMessage}");
+                }
+                
+                string errorDetail = string.Join("\n", errorMessages.Take(10));
+                if (errorMessages.Count > 10)
+                    errorDetail += $"\n... 还有 {errorMessages.Count - 10} 个错误";
+                
+                var result = MessageBox.Show(
+                    $"发现以下验证错误：\n\n{errorDetail}\n\n是否继续保存其他有效项目？",
+                    "验证错误", MessageBoxButton.YesNo, MessageBoxImage.Warning);
                 if (result == MessageBoxResult.No)
                     return;
             }
@@ -1214,7 +1250,7 @@ namespace WriteRemark
             file.Properties.System.Title.Value = CleanText(model.Title);
             file.Properties.System.Subject.Value = CleanText(model.Subject);
 
-            // 分级
+            // 分级（容错处理：无效值直接保存为空）
             string cleanRating = CleanText(model.Rating);
             if (!string.IsNullOrWhiteSpace(cleanRating))
             {
@@ -1224,7 +1260,8 @@ namespace WriteRemark
                 }
                 else
                 {
-                    throw new Exception("分级必须是 1-99 之间的数字");
+                    // 无效值，保存为空而不是抛出异常
+                    file.Properties.System.Rating.Value = null;
                 }
             }
             else
@@ -1267,6 +1304,328 @@ namespace WriteRemark
             if (!result.Contains("成功"))
             {
                 throw new Exception(result);
+            }
+        }
+
+        #endregion
+
+        #region 分级输入限制
+
+        /// <summary>
+        /// 分级输入限制：只允许输入数字
+        /// </summary>
+        private void RatingTextBox_PreviewTextInput(object sender, TextCompositionEventArgs e)
+        {
+            // 只允许数字
+            e.Handled = !IsNumeric(e.Text);
+        }
+
+        /// <summary>
+        /// 验证是否为数字
+        /// </summary>
+        private bool IsNumeric(string text)
+        {
+            return text.All(char.IsDigit);
+        }
+
+        #endregion
+
+        #region 复制到剪贴板功能
+
+        /// <summary>
+        /// 复制选中的文件到剪贴板
+        /// </summary>
+        private void BtnCopySelectedFiles_Click(object sender, RoutedEventArgs e)
+        {
+            var selected = _fileModels.Where(m => m.IsSelected).ToList();
+            if (!selected.Any())
+            {
+                MessageBox.Show("请先选择要复制的文件。", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            CopyFilesToClipboard(selected);
+            MessageBox.Show($"已复制 {selected.Count} 个文件到剪贴板（表格格式）", "完成", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+
+        /// <summary>
+        /// 复制全部文件到剪贴板
+        /// </summary>
+        private void BtnCopyAllFiles_Click(object sender, RoutedEventArgs e)
+        {
+            if (!_fileModels.Any())
+            {
+                MessageBox.Show("没有文件可复制。", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            CopyFilesToClipboard(_fileModels.ToList());
+            MessageBox.Show($"已复制 {_fileModels.Count} 个文件到剪贴板（表格格式）", "完成", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+
+        /// <summary>
+        /// 复制选中的文件夹到剪贴板
+        /// </summary>
+        private void BtnCopySelectedFolders_Click(object sender, RoutedEventArgs e)
+        {
+            var selected = _folderModels.Where(m => m.IsSelected).ToList();
+            if (!selected.Any())
+            {
+                MessageBox.Show("请先选择要复制的文件夹。", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            CopyFoldersToClipboard(selected);
+            MessageBox.Show($"已复制 {selected.Count} 个文件夹到剪贴板（表格格式）", "完成", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+
+        /// <summary>
+        /// 复制全部文件夹到剪贴板
+        /// </summary>
+        private void BtnCopyAllFolders_Click(object sender, RoutedEventArgs e)
+        {
+            if (!_folderModels.Any())
+            {
+                MessageBox.Show("没有文件夹可复制。", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            CopyFoldersToClipboard(_folderModels.ToList());
+            MessageBox.Show($"已复制 {_folderModels.Count} 个文件夹到剪贴板（表格格式）", "完成", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+
+        /// <summary>
+        /// 复制文件列表到剪贴板（表格格式）
+        /// </summary>
+        private void CopyFilesToClipboard(List<BatchFilePropertyModel> files)
+        {
+            var lines = new List<string>();
+
+            // 添加表头
+            var header = string.Join("\t", new[] { "文件名", "标题", "主题", "分级", "标记", "类别", "备注" });
+            lines.Add(header);
+
+            // 添加数据行
+            foreach (var file in files)
+            {
+                var columns = new[]
+                {
+                    file.FileName ?? "",
+                    file.Title ?? "",
+                    file.Subject ?? "",
+                    file.Rating ?? "",
+                    file.Tags ?? "",
+                    file.Category ?? "",
+                    file.Comment ?? ""
+                };
+                lines.Add(string.Join("\t", columns));
+            }
+
+            // 复制到剪贴板
+            string result = string.Join(Environment.NewLine, lines);
+            Clipboard.SetText(result);
+        }
+
+        /// <summary>
+        /// 复制文件夹列表到剪贴板（表格格式）
+        /// </summary>
+        private void CopyFoldersToClipboard(List<BatchFolderPropertyModel> folders)
+        {
+            var lines = new List<string>();
+
+            // 添加表头
+            var header = string.Join("\t", new[] { "文件夹名", "别名", "备注", "标题", "主题", "作者", "标记" });
+            lines.Add(header);
+
+            // 添加数据行
+            foreach (var folder in folders)
+            {
+                var columns = new[]
+                {
+                    folder.FolderName ?? "",
+                    folder.Alias ?? "",
+                    folder.InfoTip ?? "",
+                    folder.Title ?? "",
+                    folder.Subject ?? "",
+                    folder.Author ?? "",
+                    folder.Tags ?? ""
+                };
+                lines.Add(string.Join("\t", columns));
+            }
+
+            // 复制到剪贴板
+            string result = string.Join(Environment.NewLine, lines);
+            Clipboard.SetText(result);
+        }
+
+        /// <summary>
+        /// 复制选中的全部项（文件+文件夹）到剪贴板
+        /// </summary>
+        private void BtnCopySelectedAll_Click(object sender, RoutedEventArgs e)
+        {
+            var selectedFiles = _fileModels.Where(m => m.IsSelected).ToList();
+            var selectedFolders = _folderModels.Where(m => m.IsSelected).ToList();
+
+            if (!selectedFiles.Any() && !selectedFolders.Any())
+            {
+                MessageBox.Show("请先选择要复制的项目。", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            CopyAllToClipboard(selectedFiles, selectedFolders);
+            int total = selectedFiles.Count + selectedFolders.Count;
+            MessageBox.Show($"已复制 {total} 个项目到剪贴板（{selectedFiles.Count} 个文件，{selectedFolders.Count} 个文件夹）", 
+                "完成", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+
+        /// <summary>
+        /// 复制全部项（文件+文件夹）到剪贴板
+        /// </summary>
+        private void BtnCopyAll_Click(object sender, RoutedEventArgs e)
+        {
+            if (!_fileModels.Any() && !_folderModels.Any())
+            {
+                MessageBox.Show("没有项目可复制。", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            CopyAllToClipboard(_fileModels.ToList(), _folderModels.ToList());
+            int total = _fileModels.Count + _folderModels.Count;
+            MessageBox.Show($"已复制 {total} 个项目到剪贴板（{_fileModels.Count} 个文件，{_folderModels.Count} 个文件夹）", 
+                "完成", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+
+        /// <summary>
+        /// 复制文件和文件夹到剪贴板（组合表格格式）
+        /// </summary>
+        private void CopyAllToClipboard(List<BatchFilePropertyModel> files, List<BatchFolderPropertyModel> folders)
+        {
+            var lines = new List<string>();
+
+            // 如果有文件，先添加文件部分
+            if (files.Any())
+            {
+                lines.Add("=== 文件 ===");
+                
+                // 文件表头
+                var fileHeader = string.Join("\t", new[] { "文件名", "标题", "主题", "分级", "标记", "类别", "备注" });
+                lines.Add(fileHeader);
+
+                // 文件数据
+                foreach (var file in files)
+                {
+                    var columns = new[]
+                    {
+                        file.FileName ?? "",
+                        file.Title ?? "",
+                        file.Subject ?? "",
+                        file.Rating ?? "",
+                        file.Tags ?? "",
+                        file.Category ?? "",
+                        file.Comment ?? ""
+                    };
+                    lines.Add(string.Join("\t", columns));
+                }
+
+                lines.Add(""); // 空行分隔
+            }
+
+            // 如果有文件夹，添加文件夹部分
+            if (folders.Any())
+            {
+                lines.Add("=== 文件夹 ===");
+                
+                // 文件夹表头
+                var folderHeader = string.Join("\t", new[] { "文件夹名", "别名", "备注", "标题", "主题", "作者", "标记" });
+                lines.Add(folderHeader);
+
+                // 文件夹数据
+                foreach (var folder in folders)
+                {
+                    var columns = new[]
+                    {
+                        folder.FolderName ?? "",
+                        folder.Alias ?? "",
+                        folder.InfoTip ?? "",
+                        folder.Title ?? "",
+                        folder.Subject ?? "",
+                        folder.Author ?? "",
+                        folder.Tags ?? ""
+                    };
+                    lines.Add(string.Join("\t", columns));
+                }
+            }
+
+            // 复制到剪贴板
+            string result = string.Join(Environment.NewLine, lines);
+            Clipboard.SetText(result);
+        }
+
+        /// <summary>
+        /// 处理文件 DataGrid 的复制事件，确保使用Tab分隔
+        /// </summary>
+        private void DgFiles_CopyingRowClipboardContent(object sender, DataGridRowClipboardEventArgs e)
+        {
+            // 清除默认的复制内容
+            e.ClipboardRowContent.Clear();
+
+            var file = e.Item as BatchFilePropertyModel;
+            if (file == null) return;
+
+            // 按顺序添加列内容（跳过选择框列）
+            var columns = new[]
+            {
+                file.FileName ?? "",
+                file.Title ?? "",
+                file.Subject ?? "",
+                file.Rating ?? "",
+                file.Tags ?? "",
+                file.Category ?? "",
+                file.Comment ?? ""
+            };
+
+            // 手动构建剪贴板内容，确保使用Tab分隔
+            for (int i = 0; i < columns.Length; i++)
+            {
+                e.ClipboardRowContent.Add(new DataGridClipboardCellContent(
+                    e.Item,
+                    dgFiles.Columns[i + 1], // +1 跳过选择框列
+                    columns[i]
+                ));
+            }
+        }
+
+        /// <summary>
+        /// 处理文件夹 DataGrid 的复制事件，确保使用Tab分隔
+        /// </summary>
+        private void DgFolders_CopyingRowClipboardContent(object sender, DataGridRowClipboardEventArgs e)
+        {
+            // 清除默认的复制内容
+            e.ClipboardRowContent.Clear();
+
+            var folder = e.Item as BatchFolderPropertyModel;
+            if (folder == null) return;
+
+            // 按顺序添加列内容（跳过选择框列）
+            var columns = new[]
+            {
+                folder.FolderName ?? "",
+                folder.Alias ?? "",
+                folder.InfoTip ?? "",
+                folder.Title ?? "",
+                folder.Subject ?? "",
+                folder.Author ?? "",
+                folder.Tags ?? ""
+            };
+
+            // 手动构建剪贴板内容，确保使用Tab分隔
+            for (int i = 0; i < columns.Length; i++)
+            {
+                e.ClipboardRowContent.Add(new DataGridClipboardCellContent(
+                    e.Item,
+                    dgFolders.Columns[i + 1], // +1 跳过选择框列
+                    columns[i]
+                ));
             }
         }
 

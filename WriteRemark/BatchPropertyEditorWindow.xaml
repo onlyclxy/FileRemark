@@ -281,6 +281,15 @@
                     <Button x:Name="btnClearSelectedFile" Content="清空选中" Width="80" Margin="5,0"
                             Style="{StaticResource SecondaryButton}" Click="BtnClearSelectedFile_Click"
                             ToolTip="清空所选文件的所选字段"/>
+                    
+                    <Separator Margin="10,0" Width="2"/>
+                    
+                    <Button x:Name="btnCopySelectedFiles" Content="复制选中" Width="80" Margin="5,0"
+                            Style="{StaticResource SecondaryButton}" Click="BtnCopySelectedFiles_Click"
+                            ToolTip="复制选中文件到剪贴板（表格格式）"/>
+                    <Button x:Name="btnCopyAllFiles" Content="复制全部" Width="80" Margin="5,0"
+                            Style="{StaticResource SecondaryButton}" Click="BtnCopyAllFiles_Click"
+                            ToolTip="复制全部文件到剪贴板（表格格式）"/>
                 </WrapPanel>
 
                 <Button Grid.Column="1" x:Name="btnFileColumnSettings" Content="列设置" Width="80"
@@ -321,11 +330,13 @@
                                       FontFamily="Segoe UI, Microsoft YaHei UI, Arial"
                                       TextOptions.TextFormattingMode="Display"
                                       TextOptions.TextRenderingMode="ClearType"
-                                      RenderOptions.ClearTypeHint="Enabled">
+                                      RenderOptions.ClearTypeHint="Enabled"
+                                      ClipboardCopyMode="ExcludeHeader"
+                                      CopyingRowClipboardContent="DgFiles_CopyingRowClipboardContent">
 
                                 <DataGrid.Columns>
                                     <!-- 选择框 -->
-                                    <DataGridCheckBoxColumn Header="选择" Binding="{Binding IsSelected, UpdateSourceTrigger=PropertyChanged}" Width="50"/>
+                                    <DataGridCheckBoxColumn Header="选择" Binding="{Binding IsSelected, UpdateSourceTrigger=PropertyChanged}" Width="50" ClipboardContentBinding="{x:Null}"/>
 
                                     <!-- 文件名 -->
                                     <DataGridTextColumn Header="文件名" Binding="{Binding FileName}" Width="200" IsReadOnly="True">
@@ -348,9 +359,20 @@
                                                         HeaderStyle="{StaticResource PurpleHeader}"/>
 
                                     <!-- 分级 -->
-                                    <DataGridTextColumn Header="分级" Binding="{Binding Rating, UpdateSourceTrigger=PropertyChanged}"
-                                                        Width="80" CellStyle="{StaticResource ErrorCellStyle}"
-                                                        HeaderStyle="{StaticResource OrangeHeader}"/>
+                                    <DataGridTemplateColumn Header="分级" Width="80" HeaderStyle="{StaticResource OrangeHeader}">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding Rating}"/>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                        <DataGridTemplateColumn.CellEditingTemplate>
+                                            <DataTemplate>
+                                                <TextBox Text="{Binding Rating, UpdateSourceTrigger=PropertyChanged}"
+                                                         PreviewTextInput="RatingTextBox_PreviewTextInput"
+                                                         MaxLength="2"/>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellEditingTemplate>
+                                    </DataGridTemplateColumn>
 
                                     <!-- 标记 -->
                                     <DataGridTextColumn Header="标记" Binding="{Binding Tags, UpdateSourceTrigger=PropertyChanged}"
@@ -436,6 +458,15 @@
                                         <Button x:Name="btnClearSelectedFolder" Content="清空选中" Width="80" Margin="5,0"
                                                 Style="{StaticResource SecondaryButton}" Click="BtnClearSelectedFolder_Click"
                                                 ToolTip="清空所选文件夹的所选字段"/>
+                                        
+                                        <Separator Margin="10,0" Width="2"/>
+                                        
+                                        <Button x:Name="btnCopySelectedFolders" Content="复制选中" Width="80" Margin="5,0"
+                                                Style="{StaticResource SecondaryButton}" Click="BtnCopySelectedFolders_Click"
+                                                ToolTip="复制选中文件夹到剪贴板（表格格式）"/>
+                                        <Button x:Name="btnCopyAllFolders" Content="复制全部" Width="80" Margin="5,0"
+                                                Style="{StaticResource SecondaryButton}" Click="BtnCopyAllFolders_Click"
+                                                ToolTip="复制全部文件夹到剪贴板（表格格式）"/>
                                     </WrapPanel>
 
                                     <Button Grid.Column="1" x:Name="btnFolderColumnSettings" Content="列设置" Width="80"
@@ -460,11 +491,13 @@
                                           FontFamily="Segoe UI, Microsoft YaHei UI, Arial"
                                       TextOptions.TextFormattingMode="Display"
                                       TextOptions.TextRenderingMode="ClearType"
-                                      RenderOptions.ClearTypeHint="Enabled">
+                                      RenderOptions.ClearTypeHint="Enabled"
+                                      ClipboardCopyMode="ExcludeHeader"
+                                      CopyingRowClipboardContent="DgFolders_CopyingRowClipboardContent">
 
                                 <DataGrid.Columns>
                                     <!-- 选择框 -->
-                                    <DataGridCheckBoxColumn Header="选择" Binding="{Binding IsSelected, UpdateSourceTrigger=PropertyChanged}" Width="50"/>
+                                    <DataGridCheckBoxColumn Header="选择" Binding="{Binding IsSelected, UpdateSourceTrigger=PropertyChanged}" Width="50" ClipboardContentBinding="{x:Null}"/>
 
                                     <!-- 文件夹名 -->
                                     <DataGridTextColumn Header="文件夹名" Binding="{Binding FolderName}" Width="200" IsReadOnly="True">
@@ -537,6 +570,16 @@
             <TextBlock x:Name="txtModifiedCount" Text="0 个文件已修改" VerticalAlignment="Center"
                        Margin="0,0,20,0" FontSize="12" Foreground="#FF666666"/>
 
+            <Button x:Name="btnCopySelectedAll" Content="复制选中" Width="100" Margin="5,0"
+                    Style="{StaticResource SecondaryButton}" Click="BtnCopySelectedAll_Click"
+                    ToolTip="复制选中的文件和文件夹到剪贴板（表格格式）"/>
+
+            <Button x:Name="btnCopyAll" Content="复制全部" Width="100" Margin="5,0"
+                    Style="{StaticResource SecondaryButton}" Click="BtnCopyAll_Click"
+                    ToolTip="复制所有文件和文件夹到剪贴板（表格格式）"/>
+
+            <Separator Margin="10,0" Width="2"/>
+
             <Button x:Name="btnExportConfig" Content="导出配置" Width="100" Margin="5,0"
                     Style="{StaticResource SecondaryButton}" Click="BtnExportConfig_Click"
                     ToolTip="导出当前配置到TOML文件"/>
@@ -544,6 +587,8 @@
             <Button x:Name="btnImportConfig" Content="导入配置" Width="100" Margin="5,0"
                     Style="{StaticResource SecondaryButton}" Click="BtnImportConfig_Click"
                     ToolTip="从TOML文件导入配置"/>
+
+            <Separator Margin="10,0" Width="2"/>
 
             <Button x:Name="btnSaveAll" Content="保存全部" Width="100" Margin="5,0"
                     Style="{StaticResource ModernButton}" Click="BtnSaveAll_Click"

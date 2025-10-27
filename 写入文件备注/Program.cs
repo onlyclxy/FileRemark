@@ -27,24 +27,82 @@ class Program
         }
         else
         {
-            paths = new List<string>(args);
+            // 清理路径（去除引号和前后空格）
+            paths = CleanPaths(new List<string>(args));
+            
+            Console.WriteLine($"接收到 {paths.Count} 个路径参数：");
+            foreach (var path in paths)
+            {
+                Console.WriteLine($"  {path}");
+            }
         }
 
         // 判断路径是否存在
         if (!ValidatePaths(paths))
         {
-            Console.WriteLine("错误：路径无效，请修改代码中的路径列表或传入有效参数");
-            Console.WriteLine("按任意键退出...");
+            Console.WriteLine("\n错误：路径无效！");
+            Console.WriteLine("请检查：");
+            Console.WriteLine("  1. 路径是否正确");
+            Console.WriteLine("  2. 文件/文件夹是否存在");
+            Console.WriteLine("  3. 路径中是否包含特殊字符");
+            
+            // 显示每个路径的验证结果
+            Console.WriteLine("\n路径验证详情：");
+            foreach (var path in paths)
+            {
+                bool isFile = File.Exists(path);
+                bool isFolder = Directory.Exists(path);
+                
+                if (isFile)
+                    Console.WriteLine($"  ✓ 文件存在: {path}");
+                else if (isFolder)
+                    Console.WriteLine($"  ✓ 文件夹存在: {path}");
+                else
+                    Console.WriteLine($"  ✗ 不存在: {path}");
+            }
+            
+            Console.WriteLine("\n按任意键退出...");
             Console.ReadKey();
             return;
         }
 
         // 调用统一接口
         string result = FilePropertyEditor.ShowEditor(paths);
-        Console.WriteLine($"结果: {result}");
+        Console.WriteLine($"\n结果: {result}");
         
         Console.WriteLine("按任意键退出...");
         Console.ReadKey();
+    }
+
+    /// <summary>
+    /// 清理路径列表（去除引号、前后空格等）
+    /// </summary>
+    static List<string> CleanPaths(List<string> paths)
+    {
+        var cleanedPaths = new List<string>();
+        
+        foreach (var path in paths)
+        {
+            if (string.IsNullOrWhiteSpace(path))
+                continue;
+            
+            // 去除前后空格
+            string cleaned = path.Trim();
+            
+            // 去除前后的引号（单引号和双引号）
+            if (cleaned.StartsWith("\"") && cleaned.EndsWith("\""))
+                cleaned = cleaned.Substring(1, cleaned.Length - 2);
+            else if (cleaned.StartsWith("'") && cleaned.EndsWith("'"))
+                cleaned = cleaned.Substring(1, cleaned.Length - 2);
+            
+            // 再次去除空格（引号内可能有空格）
+            cleaned = cleaned.Trim();
+            
+            if (!string.IsNullOrWhiteSpace(cleaned))
+                cleanedPaths.Add(cleaned);
+        }
+        
+        return cleanedPaths;
     }
 
     /// <summary>
