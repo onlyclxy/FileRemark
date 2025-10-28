@@ -217,8 +217,9 @@ namespace WriteRemark
                 Content = field.DisplayName + ":",
                 VerticalAlignment = VerticalAlignment.Center,
                 Margin = new Thickness(8, 0, 8, 0),
-                FontSize = 13,
-                FontWeight = FontWeights.Medium,
+                FontSize = 15,
+                FontWeight = FontWeights.Bold,
+                FontFamily = new FontFamily("Segoe UI, Microsoft YaHei UI, Arial"),
                 Foreground = GetFieldLabelColor(field.FieldName)
             };
             Grid.SetColumn(label, colIndex++);

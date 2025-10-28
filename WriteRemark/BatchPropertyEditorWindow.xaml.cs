@@ -690,25 +690,65 @@ namespace WriteRemark
             var dialog = new Window
             {
                 Title = title,
-                Width = 320,
-                Height = 450,
+                Width = 380,
+                Height = 520,
                 WindowStartupLocation = WindowStartupLocation.CenterOwner,
                 Owner = this,
                 ResizeMode = ResizeMode.NoResize,
-                Background = new SolidColorBrush(Color.FromRgb(250, 250, 250))
+                Background = new SolidColorBrush(Color.FromRgb(250, 250, 250)),
+                WindowStyle = WindowStyle.SingleBorderWindow
             };
 
-            var mainGrid = new Grid { Margin = new Thickness(15) };
+            // 去掉左上角图标
+            dialog.SourceInitialized += (s, args) =>
+            {
+                var hwnd = new WindowInteropHelper(dialog).Handle;
+                int exStyle = GetWindowLong(hwnd, GWL_EXSTYLE);
+                SetWindowLong(hwnd, GWL_EXSTYLE, exStyle | WS_EX_DLGMODALFRAME);
+                SetWindowPos(hwnd, IntPtr.Zero, 0, 0, 0, 0,
+                    SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED);
+                SendMessage(hwnd, WM_SETICON, IntPtr.Zero, IntPtr.Zero);
+                SendMessage(hwnd, WM_SETICON, new IntPtr(1), IntPtr.Zero);
+            };
+
+            var mainGrid = new Grid { Margin = new Thickness(20) };
+            mainGrid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
             mainGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
             mainGrid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
 
-            // 标题和列表区域
+            // 标题区域
+            var titleBorder = new Border
+            {
+                Background = Brushes.White,
+                CornerRadius = new CornerRadius(8),
+                Padding = new Thickness(15),
+                Margin = new Thickness(0, 0, 0, 15)
+            };
+            titleBorder.Effect = new System.Windows.Media.Effects.DropShadowEffect
+            {
+                BlurRadius = 10,
+                ShadowDepth = 2,
+                Color = Colors.LightGray,
+                Opacity = 0.3
+            };
+
+            var titleBlock = new TextBlock
+            {
+                Text = title,
+                FontSize = 18,
+                FontWeight = FontWeights.Bold,
+                Foreground = new SolidColorBrush(Color.FromRgb(51, 51, 51)),
+                HorizontalAlignment = HorizontalAlignment.Center
+            };
+            titleBorder.Child = titleBlock;
+
+            // 列表区域
             var contentBorder = new Border
             {
                 Background = Brushes.White,
                 CornerRadius = new CornerRadius(8),
                 Padding = new Thickness(15),
-                Margin = new Thickness(0, 0, 0, 10)
+                Margin = new Thickness(0, 0, 0, 15)
             };
             contentBorder.Effect = new System.Windows.Media.Effects.DropShadowEffect
             {
@@ -719,21 +759,51 @@ namespace WriteRemark
             };
 
             var contentPanel = new StackPanel();
-            
-            var titleBlock = new TextBlock
+
+            // 说明文本
+            var descriptionText = new TextBlock
             {
-                Text = title,
-                FontSize = 16,
-                FontWeight = FontWeights.Bold,
-                Foreground = new SolidColorBrush(Color.FromRgb(51, 51, 51)),
-                Margin = new Thickness(0, 0, 0, 15)
+                Text = "选择要显示的列：",
+                FontSize = 13,
+                Foreground = new SolidColorBrush(Color.FromRgb(102, 102, 102)),
+                Margin = new Thickness(0, 0, 0, 10)
             };
-            contentPanel.Children.Add(titleBlock);
+            contentPanel.Children.Add(descriptionText);
+
+            // 快捷操作按钮
+            var quickActionsPanel = new StackPanel
+            {
+                Orientation = Orientation.Horizontal,
+                Margin = new Thickness(0, 0, 0, 10)
+            };
+
+            var selectAllBtn = new Button
+            {
+                Content = "全选",
+                Width = 70,
+                Height = 26,
+                Margin = new Thickness(0, 0, 8, 0),
+                FontSize = 11
+            };
+            selectAllBtn.SetResourceReference(Control.StyleProperty, "SecondaryButton");
+
+            var selectNoneBtn = new Button
+            {
+                Content = "全不选",
+                Width = 70,
+                Height = 26,
+                FontSize = 11
+            };
+            selectNoneBtn.SetResourceReference(Control.StyleProperty, "SecondaryButton");
+
+            quickActionsPanel.Children.Add(selectAllBtn);
+            quickActionsPanel.Children.Add(selectNoneBtn);
+            contentPanel.Children.Add(quickActionsPanel);
 
             var scrollViewer = new ScrollViewer
             {
                 VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
-                MaxHeight = 300
+                MaxHeight = 280
             };
 
             var checkBoxPanel = new StackPanel();
@@ -741,13 +811,51 @@ namespace WriteRemark
 
             foreach (var column in dataGrid.Columns.Skip(2)) // 跳过选择框和文件名/文件夹名列
             {
+                var checkBoxContainer = new Border
+                {
+                    Background = new SolidColorBrush(Color.FromRgb(248, 248, 248)),
+                    CornerRadius = new CornerRadius(4),
+                    Padding = new Thickness(10, 8, 10, 8),
+                    Margin = new Thickness(0, 4, 0, 4)
+                };
+
+                var checkBoxGrid = new Grid();
+                checkBoxGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(8) });
+                checkBoxGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+
+                // 颜色标识
+                var colorIndicator = new Border
+                {
+                    Width = 4,
+                    CornerRadius = new CornerRadius(2),
+                    Background = GetColumnColorBrush(column.Header.ToString())
+                };
+                Grid.SetColumn(colorIndicator, 0);
+                checkBoxGrid.Children.Add(colorIndicator);
+
                 var checkBox = new CheckBox
                 {
                     Content = column.Header,
                     IsChecked = column.Visibility == Visibility.Visible,
-                    Margin = new Thickness(0, 5, 0, 5),
                     FontSize = 13,
-                    Tag = column
+                    FontWeight = FontWeights.Medium,
+                    Tag = column,
+                    VerticalAlignment = VerticalAlignment.Center
+                };
+
+                Grid.SetColumn(checkBox, 1);
+                checkBoxGrid.Children.Add(checkBox);
+
+                checkBoxContainer.Child = checkBoxGrid;
+
+                // 悬停效果
+                checkBoxContainer.MouseEnter += (s, args) =>
+                {
+                    checkBoxContainer.Background = new SolidColorBrush(Color.FromRgb(240, 240, 240));
+                };
+                checkBoxContainer.MouseLeave += (s, args) =>
+                {
+                    checkBoxContainer.Background = new SolidColorBrush(Color.FromRgb(248, 248, 248));
                 };
 
                 checkBox.Checked += (s, args) =>
@@ -762,9 +870,26 @@ namespace WriteRemark
                     col.Visibility = Visibility.Collapsed;
                 };
 
-                checkBoxPanel.Children.Add(checkBox);
+                checkBoxPanel.Children.Add(checkBoxContainer);
                 columnSettings.Add((checkBox, column.Header.ToString()));
             }
+
+            // 快捷按钮事件
+            selectAllBtn.Click += (s, args) =>
+            {
+                foreach (var (checkBox, _) in columnSettings)
+                {
+                    checkBox.IsChecked = true;
+                }
+            };
+
+            selectNoneBtn.Click += (s, args) =>
+            {
+                foreach (var (checkBox, _) in columnSettings)
+                {
+                    checkBox.IsChecked = false;
+                }
+            };
 
             scrollViewer.Content = checkBoxPanel;
             contentPanel.Children.Add(scrollViewer);
@@ -774,8 +899,7 @@ namespace WriteRemark
             var buttonPanel = new StackPanel
             {
                 Orientation = Orientation.Horizontal,
-                HorizontalAlignment = HorizontalAlignment.Right,
-                Margin = new Thickness(0, 10, 0, 0)
+                HorizontalAlignment = HorizontalAlignment.Right
             };
 
             var saveButton = new Button
@@ -784,7 +908,6 @@ namespace WriteRemark
                 Width = 100,
                 Margin = new Thickness(0, 0, 10, 0)
             };
-            // 应用ModernButton样式
             saveButton.SetResourceReference(Control.StyleProperty, "ModernButton");
             saveButton.Click += (s, args) =>
             {
@@ -799,20 +922,40 @@ namespace WriteRemark
                 Width = 100,
                 IsCancel = true
             };
-            // 应用CancelButton样式
             closeButton.SetResourceReference(Control.StyleProperty, "CancelButton");
             closeButton.Click += (s, args) => dialog.Close();
 
             buttonPanel.Children.Add(saveButton);
             buttonPanel.Children.Add(closeButton);
 
-            Grid.SetRow(contentBorder, 0);
-            Grid.SetRow(buttonPanel, 1);
+            Grid.SetRow(titleBorder, 0);
+            Grid.SetRow(contentBorder, 1);
+            Grid.SetRow(buttonPanel, 2);
+            mainGrid.Children.Add(titleBorder);
             mainGrid.Children.Add(contentBorder);
             mainGrid.Children.Add(buttonPanel);
 
             dialog.Content = mainGrid;
             dialog.ShowDialog();
+        }
+
+        /// <summary>
+        /// 根据列名获取对应的颜色画刷
+        /// </summary>
+        private Brush GetColumnColorBrush(string columnName)
+        {
+            switch (columnName)
+            {
+                case "标题": return new SolidColorBrush(Color.FromRgb(33, 150, 243)); // 蓝色
+                case "主题": return new SolidColorBrush(Color.FromRgb(156, 39, 176)); // 紫色
+                case "分级": return new SolidColorBrush(Color.FromRgb(255, 152, 0)); // 橙色
+                case "标记": return new SolidColorBrush(Color.FromRgb(76, 175, 80)); // 绿色
+                case "类别": return new SolidColorBrush(Color.FromRgb(0, 188, 212)); // 青色
+                case "备注": return new SolidColorBrush(Color.FromRgb(69, 90, 100)); // 深灰
+                case "别名": return new SolidColorBrush(Color.FromRgb(33, 150, 243)); // 蓝色
+                case "作者": return new SolidColorBrush(Color.FromRgb(244, 67, 54)); // 红色
+                default: return new SolidColorBrush(Color.FromRgb(158, 158, 158)); // 默认灰色
+            }
         }
 
         /// <summary>

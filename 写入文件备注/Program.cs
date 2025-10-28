@@ -76,33 +76,62 @@ class Program
 
     /// <summary>
     /// 清理路径列表（去除引号、前后空格等）
+    /// 支持多行路径输入：如果参数中包含换行符，会按行分割
     /// </summary>
     static List<string> CleanPaths(List<string> paths)
     {
         var cleanedPaths = new List<string>();
-        
+
         foreach (var path in paths)
         {
             if (string.IsNullOrWhiteSpace(path))
                 continue;
-            
-            // 去除前后空格
-            string cleaned = path.Trim();
-            
-            // 去除前后的引号（单引号和双引号）
-            if (cleaned.StartsWith("\"") && cleaned.EndsWith("\""))
-                cleaned = cleaned.Substring(1, cleaned.Length - 2);
-            else if (cleaned.StartsWith("'") && cleaned.EndsWith("'"))
-                cleaned = cleaned.Substring(1, cleaned.Length - 2);
-            
-            // 再次去除空格（引号内可能有空格）
-            cleaned = cleaned.Trim();
-            
-            if (!string.IsNullOrWhiteSpace(cleaned))
-                cleanedPaths.Add(cleaned);
+
+            // 检查是否包含换行符（多行路径）
+            if (path.Contains("\n") || path.Contains("\r"))
+            {
+                // 按行分割，每一行是一个路径
+                var lines = path.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+                foreach (var line in lines)
+                {
+                    string cleaned = CleanSinglePath(line);
+                    if (!string.IsNullOrWhiteSpace(cleaned))
+                        cleanedPaths.Add(cleaned);
+                }
+            }
+            else
+            {
+                // 单行路径
+                string cleaned = CleanSinglePath(path);
+                if (!string.IsNullOrWhiteSpace(cleaned))
+                    cleanedPaths.Add(cleaned);
+            }
         }
-        
+
         return cleanedPaths;
+    }
+
+    /// <summary>
+    /// 清理单个路径（去除引号、前后空格）
+    /// </summary>
+    static string CleanSinglePath(string path)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+            return string.Empty;
+
+        // 去除前后空格
+        string cleaned = path.Trim();
+
+        // 去除前后的引号（单引号和双引号）
+        if (cleaned.StartsWith("\"") && cleaned.EndsWith("\""))
+            cleaned = cleaned.Substring(1, cleaned.Length - 2);
+        else if (cleaned.StartsWith("'") && cleaned.EndsWith("'"))
+            cleaned = cleaned.Substring(1, cleaned.Length - 2);
+
+        // 再次去除空格（引号内可能有空格）
+        cleaned = cleaned.Trim();
+
+        return cleaned;
     }
 
     /// <summary>
