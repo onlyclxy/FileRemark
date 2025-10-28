@@ -70,8 +70,8 @@ class Program
         string result = FilePropertyEditor.ShowEditor(paths);
         Console.WriteLine($"\n结果: {result}");
         
-        Console.WriteLine("按任意键退出...");
-        Console.ReadKey();
+        //Console.WriteLine("按任意键退出...");
+        //Console.ReadKey();
     }
 
     /// <summary>

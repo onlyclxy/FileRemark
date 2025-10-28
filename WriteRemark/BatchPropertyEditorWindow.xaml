@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:WriteRemark"
         mc:Ignorable="d"
-        Title="批量编辑属性" Height="500" Width="1200"
+        Title="批量编辑属性" Height="700" Width="1250"
         MinHeight="400" MinWidth="900"
         WindowStartupLocation="CenterScreen"
         TextOptions.TextFormattingMode="Display"
