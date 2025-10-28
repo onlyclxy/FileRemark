@@ -11,7 +11,7 @@ namespace WriteRemark
         /// 当前版本号
         /// 格式: 主版本.次版本.修订号
         /// </summary>
-        public const string Version = "1.0.5";
+        public const string Version = "1.0.7";
 
         /// <summary>
         /// 版本发布日期
@@ -22,6 +22,16 @@ namespace WriteRemark
         /// 版本更新日志
         /// </summary>
         public const string ChangeLog = @"
+v1.0.7 (2025-10-29)
+- [修复] 修复保存操作阻塞 UI 的问题: 整个保存过程真正异步化
+- [优化] 使用 Task.Run + Dispatcher.BeginInvoke 实现非阻塞保存
+- [性能] 动画和保存完全并行, UI 完全流畅
+
+v1.0.6 (2025-10-29)
+- [体验] 保存时添加从上到下滚动渐变消失动画, 掩盖延迟
+- [新增] AnimationHelper 动画辅助类
+- [优化] 成功保存后直接关闭窗口, 无需等待消息框
+
 v1.0.5 (2025-10-29)
 - [简化] 移除显示更多功能, 固定显示20条历史记录
 - [优化] 简化代码逻辑, 提升稳定性

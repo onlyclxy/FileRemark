@@ -1467,84 +1467,118 @@ namespace WriteRemark
                 return;
             }
 
-            // 显示进度
-            progressPanel.Visibility = Visibility.Visible;
+            // 禁用按钮
             btnSaveAll.IsEnabled = false;
             btnSaveSelected.IsEnabled = false;
             btnCancel.IsEnabled = false;
 
-            int total = validFiles.Count + validFolders.Count;
-            int success = 0;
-            int failed = 0;
-            List<string> errors = new List<string>();
+            // 显示进度
+            progressPanel.Visibility = Visibility.Visible;
 
-            // 保存文件
-            for (int i = 0; i < validFiles.Count; i++)
+            // 立即启动动画（不等待，让它在后台播放）
+            var animationTask = AnimationHelper.AnimateSlideDownFadeOut(this, 0.6);
+
+            // 整个保存过程放到后台线程执行，完全不阻塞 UI
+            var saveTask = Task.Run(async () =>
             {
-                var model = validFiles[i];
-                txtProgress.Text = $"正在保存文件 {i + 1}/{validFiles.Count}: {model.FileName}";
-                progressBar.Value = (success + failed + 1) * 100.0 / total;
+                int total = validFiles.Count + validFolders.Count;
+                int success = 0;
+                int failed = 0;
+                List<string> errors = new List<string>();
 
-                try
+                // 保存文件
+                for (int i = 0; i < validFiles.Count; i++)
                 {
-                    await Task.Run(() => SaveSingleFile(model));
-                    success++;
-                    model.IsModified = false;
-                }
-                catch (Exception ex)
-                {
-                    failed++;
-                    errors.Add($"[文件] {model.FileName}: {ex.Message}");
-                }
+                    var model = validFiles[i];
+                    
+                    // 使用 Dispatcher 非阻塞更新 UI
+                    await Dispatcher.BeginInvoke(new Action(() =>
+                    {
+                        txtProgress.Text = $"正在保存文件 {i + 1}/{validFiles.Count}: {model.FileName}";
+                        progressBar.Value = (success + failed + 1) * 100.0 / total;
+                    }));
 
-                await Task.Delay(10);
-            }
+                    try
+                    {
+                        SaveSingleFile(model);
+                        success++;
+                        await Dispatcher.BeginInvoke(new Action(() => model.IsModified = false));
+                    }
+                    catch (Exception ex)
+                    {
+                        failed++;
+                        errors.Add($"[文件] {model.FileName}: {ex.Message}");
+                    }
 
-            // 保存文件夹
-            for (int i = 0; i < validFolders.Count; i++)
-            {
-                var model = validFolders[i];
-                txtProgress.Text = $"正在保存文件夹 {i + 1}/{validFolders.Count}: {model.FolderName}";
-                progressBar.Value = (success + failed + 1) * 100.0 / total;
-
-                try
-                {
-                    await Task.Run(() => SaveSingleFolder(model));
-                    success++;
-                    model.IsModified = false;
-                }
-                catch (Exception ex)
-                {
-                    failed++;
-                    errors.Add($"[文件夹] {model.FolderName}: {ex.Message}");
+                    await Task.Delay(10);
                 }
 
-                await Task.Delay(10);
-            }
+                // 保存文件夹
+                for (int i = 0; i < validFolders.Count; i++)
+                {
+                    var model = validFolders[i];
+                    
+                    // 使用 Dispatcher 非阻塞更新 UI
+                    await Dispatcher.BeginInvoke(new Action(() =>
+                    {
+                        txtProgress.Text = $"正在保存文件夹 {i + 1}/{validFolders.Count}: {model.FolderName}";
+                        progressBar.Value = (success + failed + 1) * 100.0 / total;
+                    }));
+
+                    try
+                    {
+                        SaveSingleFolder(model);
+                        success++;
+                        await Dispatcher.BeginInvoke(new Action(() => model.IsModified = false));
+                    }
+                    catch (Exception ex)
+                    {
+                        failed++;
+                        errors.Add($"[文件夹] {model.FolderName}: {ex.Message}");
+                    }
+
+                    await Task.Delay(10);
+                }
+
+                return (success, failed, errors);
+            });
+
+            // 等待保存完成
+            var (success, failed, errors) = await saveTask;
+
+            // 等待动画完成
+            await animationTask;
 
             // 隐藏进度
             progressPanel.Visibility = Visibility.Collapsed;
-            btnSaveAll.IsEnabled = true;
-            btnSaveSelected.IsEnabled = true;
-            btnCancel.IsEnabled = true;
 
-            // 显示结果
-            string message = $"保存完成!\n成功: {success} 个\n失败: {failed} 个";
-            if (errors.Any())
-            {
-                message += "\n\n错误详情:\n" + string.Join("\n", errors.Take(5));
-                if (errors.Count > 5)
-                    message += $"\n... 还有 {errors.Count - 5} 个错误";
-            }
-
-            MessageBox.Show(message, "保存结果",
-                MessageBoxButton.OK,
-                failed > 0 ? MessageBoxImage.Warning : MessageBoxImage.Information);
-
+            // 显示结果并关闭窗口
             if (failed == 0)
             {
+                // 成功保存，直接关闭窗口
                 this.DialogResult = true;
                 this.Close();
+            }
+            else
+            {
+                // 有错误，恢复窗口显示
+                this.Opacity = 1.0;
+                this.RenderTransform = null;
+                btnSaveAll.IsEnabled = true;
+                btnSaveSelected.IsEnabled = true;
+                btnCancel.IsEnabled = true;
+
+                // 显示结果
+                string message = $"保存完成!\n成功: {success} 个\n失败: {failed} 个";
+                if (errors.Any())
+                {
+                    message += "\n\n错误详情:\n" + string.Join("\n", errors.Take(5));
+                    if (errors.Count > 5)
+                        message += $"\n... 还有 {errors.Count - 5} 个错误";
+                }
+
+                MessageBox.Show(message, "保存结果",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
 
