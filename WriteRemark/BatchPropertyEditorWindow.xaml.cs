@@ -216,6 +216,89 @@ namespace WriteRemark
 
             UpdateModifiedCount();
             UpdateExpanderHeaders();
+
+            // 为批量操作的ComboBox添加历史记录功能
+            InitializeBatchOperationHistory();
+        }
+
+        /// <summary>
+        /// 初始化批量操作的历史记录功能
+        /// </summary>
+        private void InitializeBatchOperationHistory()
+        {
+            // 为文件批量操作输入框添加历史记录功能
+            if (cmbBatchFieldFile.SelectedItem is ComboBoxItem selectedFileItem)
+            {
+                string fieldName = GetHistoryFieldNameForFile(selectedFileItem.Content.ToString());
+                HistoryComboBoxHelper.AttachHistoryFeature(txtBatchValueFile, fieldName);
+            }
+
+            // 为文件夹批量操作输入框添加历史记录功能
+            if (cmbBatchFieldFolder.SelectedItem is ComboBoxItem selectedFolderItem)
+            {
+                string fieldName = GetHistoryFieldNameForFolder(selectedFolderItem.Content.ToString());
+                HistoryComboBoxHelper.AttachHistoryFeature(txtBatchValueFolder, fieldName);
+            }
+        }
+
+        /// <summary>
+        /// 文件字段选择改变时，更新历史记录
+        /// </summary>
+        private void CmbBatchFieldFile_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (cmbBatchFieldFile.SelectedItem is ComboBoxItem selectedItem && txtBatchValueFile != null)
+            {
+                string fieldName = GetHistoryFieldNameForFile(selectedItem.Content.ToString());
+                HistoryComboBoxHelper.AttachHistoryFeature(txtBatchValueFile, fieldName);
+                txtBatchValueFile.Text = ""; // 清空输入
+            }
+        }
+
+        /// <summary>
+        /// 文件夹字段选择改变时，更新历史记录
+        /// </summary>
+        private void CmbBatchFieldFolder_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (cmbBatchFieldFolder.SelectedItem is ComboBoxItem selectedItem && txtBatchValueFolder != null)
+            {
+                string fieldName = GetHistoryFieldNameForFolder(selectedItem.Content.ToString());
+                HistoryComboBoxHelper.AttachHistoryFeature(txtBatchValueFolder, fieldName);
+                txtBatchValueFolder.Text = ""; // 清空输入
+            }
+        }
+
+        /// <summary>
+        /// 获取文件字段的历史记录字段名
+        /// </summary>
+        private string GetHistoryFieldNameForFile(string displayName)
+        {
+            return displayName switch
+            {
+                "标题" => "Title",
+                "主题" => "Subject",
+                "分级" => "Rating",
+                "标记" => "Tags",
+                "类别" => "Category",
+                "备注" => "Comment",
+                _ => displayName
+            };
+        }
+
+        /// <summary>
+        /// 获取文件夹字段的历史记录字段名
+        /// </summary>
+        private string GetHistoryFieldNameForFolder(string displayName)
+        {
+            return displayName switch
+            {
+                "别名" => "LocalizedResourceName",
+                "备注" => "InfoTip",
+                "标题" => "Prop2",
+                "主题" => "Prop3",
+                "作者" => "Prop4",
+                "标记" => "Prop5",
+                _ => displayName
+            };
         }
 
         /// <summary>
@@ -484,6 +567,22 @@ namespace WriteRemark
                 return;
             }
 
+            // 保存到历史记录
+            if (!string.IsNullOrWhiteSpace(value))
+            {
+                string historyFieldName = fieldName switch
+                {
+                    "标题" => "Title",
+                    "主题" => "Subject",
+                    "分级" => "Rating",
+                    "标记" => "Tags",
+                    "类别" => "Category",
+                    "备注" => "Comment",
+                    _ => fieldName
+                };
+                HistoryManager.AddOrUpdateHistory(historyFieldName, value);
+            }
+
             foreach (var model in selectedModels)
             {
                 switch (fieldName)
@@ -569,6 +668,22 @@ namespace WriteRemark
             {
                 MessageBox.Show("请先选择要操作的文件夹。", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
                 return;
+            }
+
+            // 保存到历史记录
+            if (!string.IsNullOrWhiteSpace(value))
+            {
+                string historyFieldName = fieldName switch
+                {
+                    "别名" => "LocalizedResourceName",
+                    "备注" => "InfoTip",
+                    "标题" => "Prop2",
+                    "主题" => "Prop3",
+                    "作者" => "Prop4",
+                    "标记" => "Prop5",
+                    _ => fieldName
+                };
+                HistoryManager.AddOrUpdateHistory(historyFieldName, value);
             }
 
             foreach (var model in selectedModels)
@@ -1205,6 +1320,15 @@ namespace WriteRemark
 
         #endregion
 
+        #region 诊断功能
+
+        private void BtnDiagnostics_Click(object sender, RoutedEventArgs e)
+        {
+            HistoryDiagnostics.ShowDiagnostics();
+        }
+
+        #endregion
+
         #region 保存操作
 
         private async void BtnSaveAll_Click(object sender, RoutedEventArgs e)
@@ -1390,8 +1514,15 @@ namespace WriteRemark
             string CleanText(string text) => (text ?? "").TrimEnd('\r', '\n', ' ', '\t');
 
             // 保存各个属性
-            file.Properties.System.Title.Value = CleanText(model.Title);
-            file.Properties.System.Subject.Value = CleanText(model.Subject);
+            string cleanTitle = CleanText(model.Title);
+            file.Properties.System.Title.Value = cleanTitle;
+            if (!string.IsNullOrWhiteSpace(cleanTitle))
+                HistoryManager.AddOrUpdateHistory("Title", cleanTitle);
+
+            string cleanSubject = CleanText(model.Subject);
+            file.Properties.System.Subject.Value = cleanSubject;
+            if (!string.IsNullOrWhiteSpace(cleanSubject))
+                HistoryManager.AddOrUpdateHistory("Subject", cleanSubject);
 
             // 分级（容错处理：无效值直接保存为空）
             string cleanRating = CleanText(model.Rating);
@@ -1400,6 +1531,7 @@ namespace WriteRemark
                 if (int.TryParse(cleanRating, out int rating) && rating >= 1 && rating <= 99)
                 {
                     file.Properties.System.Rating.Value = (uint)rating;
+                    HistoryManager.AddOrUpdateHistory("Rating", cleanRating);
                 }
                 else
                 {
@@ -1413,17 +1545,26 @@ namespace WriteRemark
             }
 
             // 标记
-            string[] tags = CleanText(model.Tags).Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries)
+            string cleanTags = CleanText(model.Tags);
+            string[] tags = cleanTags.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries)
                 .Select(tag => tag.Trim()).Where(tag => !string.IsNullOrEmpty(tag)).ToArray();
             file.Properties.System.Keywords.Value = tags;
+            if (!string.IsNullOrWhiteSpace(cleanTags))
+                HistoryManager.AddOrUpdateHistory("Tags", cleanTags);
 
             // 类别
-            string[] categories = CleanText(model.Category).Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries)
+            string cleanCategory = CleanText(model.Category);
+            string[] categories = cleanCategory.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries)
                 .Select(cat => cat.Trim()).Where(cat => !string.IsNullOrEmpty(cat)).ToArray();
             file.Properties.System.Category.Value = categories;
+            if (!string.IsNullOrWhiteSpace(cleanCategory))
+                HistoryManager.AddOrUpdateHistory("Category", cleanCategory);
 
             // 备注
-            file.Properties.System.Comment.Value = CleanText(model.Comment);
+            string cleanComment = CleanText(model.Comment);
+            file.Properties.System.Comment.Value = cleanComment;
+            if (!string.IsNullOrWhiteSpace(cleanComment))
+                HistoryManager.AddOrUpdateHistory("Comment", cleanComment);
         }
 
         private void SaveSingleFolder(BatchFolderPropertyModel model)
@@ -1431,14 +1572,21 @@ namespace WriteRemark
             // 清理函数
             string CleanText(string text) => (text ?? "").TrimEnd('\r', '\n', ' ', '\t');
 
+            string cleanAlias = CleanText(model.Alias);
+            string cleanInfoTip = CleanText(model.InfoTip);
+            string cleanTitle = CleanText(model.Title);
+            string cleanSubject = CleanText(model.Subject);
+            string cleanAuthor = CleanText(model.Author);
+            string cleanTags = CleanText(model.Tags);
+
             var folderInfo = new FolderInfo
             {
-                LocalizedResourceName = CleanText(model.Alias),
-                InfoTip = CleanText(model.InfoTip),
-                Prop2 = CleanText(model.Title),
-                Prop3 = CleanText(model.Subject),
-                Prop4 = CleanText(model.Author),
-                Prop5 = CleanText(model.Tags)
+                LocalizedResourceName = cleanAlias,
+                InfoTip = cleanInfoTip,
+                Prop2 = cleanTitle,
+                Prop3 = cleanSubject,
+                Prop4 = cleanAuthor,
+                Prop5 = cleanTags
             };
 
             // 使用 FolderRemarkManager 保存文件夹属性
@@ -1448,6 +1596,20 @@ namespace WriteRemark
             {
                 throw new Exception(result);
             }
+
+            // 保存到历史记录
+            if (!string.IsNullOrWhiteSpace(cleanAlias))
+                HistoryManager.AddOrUpdateHistory("LocalizedResourceName", cleanAlias);
+            if (!string.IsNullOrWhiteSpace(cleanInfoTip))
+                HistoryManager.AddOrUpdateHistory("InfoTip", cleanInfoTip);
+            if (!string.IsNullOrWhiteSpace(cleanTitle))
+                HistoryManager.AddOrUpdateHistory("Prop2", cleanTitle);
+            if (!string.IsNullOrWhiteSpace(cleanSubject))
+                HistoryManager.AddOrUpdateHistory("Prop3", cleanSubject);
+            if (!string.IsNullOrWhiteSpace(cleanAuthor))
+                HistoryManager.AddOrUpdateHistory("Prop4", cleanAuthor);
+            if (!string.IsNullOrWhiteSpace(cleanTags))
+                HistoryManager.AddOrUpdateHistory("Prop5", cleanTags);
         }
 
         #endregion

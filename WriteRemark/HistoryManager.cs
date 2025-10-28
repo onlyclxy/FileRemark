@@ -18,6 +18,16 @@ namespace WriteRemark
         private static bool _isInitialized = false;
         private static Exception _initException = null;
 
+        /// <summary>
+        /// 获取初始化状态
+        /// </summary>
+        public static bool IsInitialized => _isInitialized;
+
+        /// <summary>
+        /// 获取初始化异常
+        /// </summary>
+        public static Exception GetInitException() => _initException;
+
         static HistoryManager()
         {
             try

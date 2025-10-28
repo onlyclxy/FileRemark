@@ -263,7 +263,8 @@
 
                     <Separator Margin="10,0" Width="2"/>
 
-                    <ComboBox x:Name="cmbBatchFieldFile" Width="100" Margin="5,0" SelectedIndex="0">
+                    <ComboBox x:Name="cmbBatchFieldFile" Width="100" Margin="5,0" SelectedIndex="0"
+                              SelectionChanged="CmbBatchFieldFile_SelectionChanged">
                         <ComboBoxItem Content="标题"/>
                         <ComboBoxItem Content="主题"/>
                         <ComboBoxItem Content="分级"/>
@@ -272,8 +273,8 @@
                         <ComboBoxItem Content="备注"/>
                     </ComboBox>
 
-                    <TextBox x:Name="txtBatchValueFile" Width="200" Margin="5,0"
-                             VerticalAlignment="Center" Padding="5"/>
+                    <ComboBox x:Name="txtBatchValueFile" Width="200" Margin="5,0"
+                              VerticalAlignment="Center" IsEditable="True"/>
 
                     <Button x:Name="btnApplyBatchFile" Content="应用到选中" Width="90" Margin="5,0"
                             Style="{StaticResource ModernButton}" Click="BtnApplyBatchFile_Click"/>
@@ -440,7 +441,8 @@
 
                                         <Separator Margin="10,0" Width="2"/>
 
-                                        <ComboBox x:Name="cmbBatchFieldFolder" Width="100" Margin="5,0" SelectedIndex="0">
+                                        <ComboBox x:Name="cmbBatchFieldFolder" Width="100" Margin="5,0" SelectedIndex="0"
+                                                  SelectionChanged="CmbBatchFieldFolder_SelectionChanged">
                                             <ComboBoxItem Content="别名"/>
                                             <ComboBoxItem Content="备注"/>
                                             <ComboBoxItem Content="标题"/>
@@ -449,8 +451,8 @@
                                             <ComboBoxItem Content="标记"/>
                                         </ComboBox>
 
-                                        <TextBox x:Name="txtBatchValueFolder" Width="200" Margin="5,0"
-                                                 VerticalAlignment="Center" Padding="5"/>
+                                        <ComboBox x:Name="txtBatchValueFolder" Width="200" Margin="5,0"
+                                                  VerticalAlignment="Center" IsEditable="True"/>
 
                                         <Button x:Name="btnApplyBatchFolder" Content="应用到选中" Width="90" Margin="5,0"
                                                 Style="{StaticResource ModernButton}" Click="BtnApplyBatchFolder_Click"/>
@@ -587,6 +589,12 @@
             <Button x:Name="btnImportConfig" Content="导入配置" Width="100" Margin="5,0"
                     Style="{StaticResource SecondaryButton}" Click="BtnImportConfig_Click"
                     ToolTip="从TOML文件导入配置"/>
+
+            <Separator Margin="10,0" Width="2"/>
+
+            <Button x:Name="btnDiagnostics" Content="历史诊断" Width="100" Margin="5,0"
+                    Style="{StaticResource SecondaryButton}" Click="BtnDiagnostics_Click"
+                    ToolTip="检查历史记录功能是否正常"/>
 
             <Separator Margin="10,0" Width="2"/>
 

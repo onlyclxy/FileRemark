@@ -511,6 +511,11 @@ namespace WriteRemark
             LoadProperties();
         }
 
+        private void BtnDiagnostics_Click(object sender, RoutedEventArgs e)
+        {
+            HistoryDiagnostics.ShowDiagnostics();
+        }
+
         private void BtnSave_Click(object sender, RoutedEventArgs e)
         {
             try
