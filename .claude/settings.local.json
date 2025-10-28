@@ -2,7 +2,15 @@
   "permissions": {
     "allow": [
       "Bash(nuget restore:*)",
-      "Bash(msbuild /t:Restore:*)"
+      "Bash(msbuild /t:Restore:*)",
+      "Bash(where:*)",
+      "Bash(\"F:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\MSBuild\\Current\\Bin\\MSBuild.exe\" \"D:\\OneDrive - whq116\\C#\\写入文件备注\\WriteRemark.sln\" /t:Restore)",
+      "Bash(\"F:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\MSBuild\\Current\\Bin\\MSBuild.exe\" \"D:\\OneDrive - whq116\\C#\\写入文件备注\\WriteRemark.sln\" -t:Restore)",
+      "Bash(\"F:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\MSBuild\\Current\\Bin\\MSBuild.exe\":*)",
+      "Bash(\"F:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\MSBuild\\Current\\Bin\\MSBuild.exe\" \"D:\\OneDrive - whq116\\C#\\写入文件备注\\WriteRemark\\WriteRemark.csproj\" /p:Configuration=Debug)",
+      "Bash(\"F:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\MSBuild\\Current\\Bin\\MSBuild.exe\" \"D:\\OneDrive - whq116\\C#\\写入文件备注\\WriteRemark\\WriteRemark.csproj\" -p:Configuration=Debug)",
+      "Read(//f/Program Files/Microsoft Visual Studio/2022/Community/**)",
+      "Bash(\"F:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\MSBuild\\Current\\Bin\\MSBuild.exe\" \"D:\\OneDrive - whq116\\C#\\写入文件备注\\写入文件备注.sln\" -t:Restore -v:detailed)"
     ],
     "deny": [],
     "ask": []

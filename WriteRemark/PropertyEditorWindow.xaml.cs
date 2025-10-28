@@ -241,7 +241,6 @@ namespace WriteRemark
             {
                 // 分级字段 - 数字输入，带历史记录
                 comboBox = HistoryComboBoxHelper.CreateHistoryComboBox(field.FieldName);
-                comboBox.MaxLength = 3;
 
                 // 获取内部TextBox并添加数字输入限制
                 comboBox.Loaded += (s, e) =>
@@ -251,6 +250,9 @@ namespace WriteRemark
                     var textBox = cb.Template?.FindName("PART_EditableTextBox", cb) as TextBox;
                     if (textBox != null)
                     {
+                        // 设置最大长度
+                        textBox.MaxLength = 3;
+
                         textBox.PreviewTextInput += (sender, args) =>
                         {
                             args.Handled = !IsNumeric(args.Text);
@@ -542,8 +544,13 @@ namespace WriteRemark
                                 }
                                 else
                                 {
-                                    MessageBox.Show("\"分级\"必须是 1-99 之间的数字。", "输入无效", MessageBoxButton.OK, MessageBoxImage.Warning);
+                                    MessageBox.Show(
+                                        "分级字段必须是 1-99 之间的整数。\n\n请输入有效的数字后再保存。",
+                                        "输入无效",
+                                        MessageBoxButton.OK,
+                                        MessageBoxImage.Warning);
                                     comboBox.Focus();
+                                    comboBox.SelectAll();
                                     return;
                                 }
                             }

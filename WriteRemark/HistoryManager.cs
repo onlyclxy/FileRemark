@@ -15,16 +15,31 @@ namespace WriteRemark
         private static string _dbPath;
         private static readonly object _lockObj = new object();
         private const int HISTORY_RETENTION_DAYS = 90;
+        private static bool _isInitialized = false;
+        private static Exception _initException = null;
 
         static HistoryManager()
         {
-            // 数据库文件放在DLL所在目录
-            string dllPath = Assembly.GetExecutingAssembly().Location;
-            string directory = Path.GetDirectoryName(dllPath);
-            _dbPath = Path.Combine(directory, "InputHistory.db");
+            try
+            {
+                // 数据库文件放在DLL所在目录
+                string dllPath = Assembly.GetExecutingAssembly().Location;
+                string directory = Path.GetDirectoryName(dllPath);
+                _dbPath = Path.Combine(directory, "InputHistory.db");
 
-            InitializeDatabase();
-            CleanOldRecords();
+                InitializeDatabase();
+                CleanOldRecords();
+                _isInitialized = true;
+            }
+            catch (Exception ex)
+            {
+                // 捕获初始化异常，但不抛出，允许程序继续运行
+                _initException = ex;
+                _isInitialized = false;
+
+                // 可选：记录到Windows事件日志
+                System.Diagnostics.Debug.WriteLine($"HistoryManager 初始化失败: {ex.Message}");
+            }
         }
 
         /// <summary>
@@ -104,6 +119,9 @@ namespace WriteRemark
         /// <param name="value">值</param>
         public static void AddOrUpdateHistory(string fieldName, string value)
         {
+            if (!_isInitialized)
+                return; // 如果未初始化，静默返回
+
             if (string.IsNullOrWhiteSpace(fieldName) || string.IsNullOrWhiteSpace(value))
                 return;
 
@@ -153,6 +171,9 @@ namespace WriteRemark
         /// <returns>历史记录列表</returns>
         public static List<string> GetHistory(string fieldName, int limit = 20)
         {
+            if (!_isInitialized)
+                return new List<string>(); // 如果未初始化，返回空列表
+
             if (string.IsNullOrWhiteSpace(fieldName))
                 return new List<string>();
 
@@ -207,6 +228,9 @@ namespace WriteRemark
         /// <returns>匹配的历史记录列表</returns>
         public static List<string> SearchHistory(string fieldName, string searchText, int limit = 10)
         {
+            if (!_isInitialized)
+                return new List<string>(); // 如果未初始化，返回空列表
+
             if (string.IsNullOrWhiteSpace(fieldName))
                 return new List<string>();
 
@@ -268,6 +292,9 @@ namespace WriteRemark
         /// <param name="value">值</param>
         public static void DeleteHistory(string fieldName, string value)
         {
+            if (!_isInitialized)
+                return; // 如果未初始化，静默返回
+
             if (string.IsNullOrWhiteSpace(fieldName) || string.IsNullOrWhiteSpace(value))
                 return;
 
@@ -305,6 +332,9 @@ namespace WriteRemark
         /// <param name="fieldName">字段名</param>
         public static void ClearFieldHistory(string fieldName)
         {
+            if (!_isInitialized)
+                return; // 如果未初始化，静默返回
+
             if (string.IsNullOrWhiteSpace(fieldName))
                 return;
 
@@ -340,6 +370,9 @@ namespace WriteRemark
         /// </summary>
         public static void ClearAllHistory()
         {
+            if (!_isInitialized)
+                return; // 如果未初始化，静默返回
+
             lock (_lockObj)
             {
                 try

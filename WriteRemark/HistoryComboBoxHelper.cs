@@ -160,7 +160,8 @@ namespace WriteRemark
                 if (suggestions.Any())
                 {
                     // 保存当前文本位置
-                    int selectionStart = comboBox.SelectionStart;
+                    var textBox = GetComboBoxTextBox(comboBox);
+                    int selectionStart = textBox?.SelectionStart ?? text.Length;
 
                     // 更新建议列表
                     comboBox.ItemsSource = suggestions;
@@ -170,7 +171,6 @@ namespace WriteRemark
 
                     // 恢复文本和光标位置
                     comboBox.Text = text;
-                    var textBox = GetComboBoxTextBox(comboBox);
                     if (textBox != null)
                     {
                         textBox.SelectionStart = selectionStart;
