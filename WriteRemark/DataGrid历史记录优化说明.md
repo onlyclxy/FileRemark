@@ -380,15 +380,74 @@ public static class AppVersion
 - 编辑文件属性 - v1.0.3
 - 编辑文件夹属性 - v1.0.3
 
+## 🐛 第四轮修复："显示更多"功能修复（v1.0.4）
+
+### ⚠️ 问题现象
+用户反馈点击 "... 显示更多历史记录 ..." 后：
+- ✗ 输入框内容变空白
+- ✗ 下拉菜单消失
+- ✗ 历史记录没有增多
+
+### 🔍 根本原因
+```csharp
+comboBox.SelectedIndex = -1;  // ← 直接清除选中，会清空 Text！
+```
+
+在可编辑的 ComboBox 中，清除选中项会同时清空文本。
+
+### ✅ 解决方案
+
+#### 修改前（会清空文本）
+```csharp
+if (selectedText == SHOW_MORE_PLACEHOLDER)
+{
+    LoadHistory(comboBox, fieldName, showAll: true);
+    comboBox.IsDropDownOpen = true;
+    comboBox.SelectedIndex = -1;  // ❌ 清空文本
+}
+```
+
+#### 修改后（保留文本）
+```csharp
+if (selectedText == SHOW_MORE_PLACEHOLDER)
+{
+    // 1. 保存当前文本
+    string currentText = comboBox.Text;
+    
+    // 2. 加载全部历史
+    LoadHistory(comboBox, fieldName, showAll: true);
+    
+    // 3. 恢复文本和状态
+    comboBox.Text = currentText;
+    comboBox.IsDropDownOpen = true;
+    
+    // 4. 延迟清除选择（确保 UI 更新完成）
+    comboBox.Dispatcher.BeginInvoke(new Action(() =>
+    {
+        comboBox.SelectedIndex = -1;
+    }), DispatcherPriority.Background);
+}
+```
+
+### 📊 修复效果
+
+| 操作 | v1.0.3 | v1.0.4 | 改进 |
+|-----|--------|--------|------|
+| 点击"显示更多" | ✗ 文本清空 | ✅ 文本保留 | ⬆️ **修复** |
+| 下拉菜单 | ✗ 消失 | ✅ 保持打开 | ⬆️ **修复** |
+| 历史记录显示 | ✗ 未增多 | ✅ 显示30条 | ⬆️ **修复** |
+| DataGrid 绑定 | ✗ 数据丢失 | ✅ 数据保留 | ⬆️ **修复** |
+
 ## ✨ 后续优化建议
 
 1. ✅ **已完成** - DataGrid 所有文本列改为 ComboBox
 2. ✅ **已完成** - 超轻量级加载和事件绑定
 3. ✅ **已完成** - 异步保存历史记录
 4. ✅ **已完成** - 版本号管理系统
-5. 🔜 **可选** - 添加常用值的快捷按钮
-6. 🔜 **可选** - 支持历史记录导入/导出
-7. 🔜 **可选** - 添加历史记录统计分析
+5. ✅ **已完成** - 修复"显示更多"功能
+6. 🔜 **可选** - 添加常用值的快捷按钮
+7. 🔜 **可选** - 支持历史记录导入/导出
+8. 🔜 **可选** - 添加历史记录统计分析
 
 ## 📌 注意事项
 

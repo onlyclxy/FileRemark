@@ -16,11 +16,8 @@ namespace WriteRemark
         // 用于标记ComboBox是否已经附加过历史功能，避免重复附加
         private static readonly string HISTORY_ATTACHED_KEY = "HistoryAttached";
         
-        // 历史记录缓存，避免频繁查询数据库
+        // 历史记录缓存，避免频繁查询数据库（固定最多20条）
         private static readonly Dictionary<string, List<string>> _historyCache = new Dictionary<string, List<string>>();
-        
-        // "显示更多"的占位符
-        private const string SHOW_MORE_PLACEHOLDER = "... 显示更多历史记录 ...";
         /// <summary>
         /// 创建带历史记录功能的ComboBox
         /// </summary>
@@ -114,8 +111,8 @@ namespace WriteRemark
                 {
                     if (!_historyCache.ContainsKey(fieldName))
                     {
-                        // 加载最多30条历史记录
-                        var history = HistoryManager.GetHistory(fieldName, 30);
+                        // 固定加载20条历史记录
+                        var history = HistoryManager.GetHistory(fieldName, 20);
                         _historyCache[fieldName] = history;
                     }
                 }
@@ -138,50 +135,37 @@ namespace WriteRemark
         }
 
         /// <summary>
-        /// 加载历史记录到ComboBox（默认显示5条 + "显示更多"）
+        /// 加载历史记录到ComboBox（固定显示20条）
         /// </summary>
-        private static void LoadHistory(ComboBox comboBox, string fieldName, bool showAll = false)
+        private static void LoadHistory(ComboBox comboBox, string fieldName)
         {
             try
             {
-                List<string> fullHistory;
+                List<string> history;
 
                 // 从缓存获取
                 lock (_historyCache)
                 {
                     if (_historyCache.TryGetValue(fieldName, out var cached))
                     {
-                        fullHistory = cached;
+                        history = cached;
                     }
                     else
                     {
-                        // 如果缓存中没有，立即加载
-                        fullHistory = HistoryManager.GetHistory(fieldName, 30);
-                        _historyCache[fieldName] = fullHistory;
+                        // 如果缓存中没有，立即加载20条
+                        history = HistoryManager.GetHistory(fieldName, 20);
+                        _historyCache[fieldName] = history;
                     }
                 }
 
-                if (fullHistory == null || fullHistory.Count == 0)
+                if (history == null || history.Count == 0)
                 {
                     comboBox.ItemsSource = new List<string>();
                     return;
                 }
 
-                List<string> displayHistory;
-                
-                if (showAll || fullHistory.Count <= 5)
-                {
-                    // 显示全部
-                    displayHistory = new List<string>(fullHistory);
-                }
-                else
-                {
-                    // 只显示前5条 + "显示更多"
-                    displayHistory = new List<string>(fullHistory.Take(5));
-                    displayHistory.Add(SHOW_MORE_PLACEHOLDER);
-                }
-
-                comboBox.ItemsSource = displayHistory;
+                // 直接显示所有历史记录（最多20条）
+                comboBox.ItemsSource = new List<string>(history);
             }
             catch (Exception)
             {
@@ -226,12 +210,12 @@ namespace WriteRemark
                     return;
                 }
 
-                List<string> fullHistory;
+                List<string> history;
 
                 // 只从缓存获取，不查询数据库
                 lock (_historyCache)
                 {
-                    if (!_historyCache.TryGetValue(fieldName, out fullHistory))
+                    if (!_historyCache.TryGetValue(fieldName, out history))
                     {
                         // 缓存中没有，返回空列表
                         comboBox.ItemsSource = new List<string>();
@@ -239,25 +223,14 @@ namespace WriteRemark
                     }
                 }
 
-                if (fullHistory == null || fullHistory.Count == 0)
+                if (history == null || history.Count == 0)
                 {
                     comboBox.ItemsSource = new List<string>();
                     return;
                 }
 
-                // 显示前5条 + "显示更多"
-                List<string> displayHistory;
-                if (fullHistory.Count <= 5)
-                {
-                    displayHistory = new List<string>(fullHistory);
-                }
-                else
-                {
-                    displayHistory = new List<string>(fullHistory.Take(5));
-                    displayHistory.Add(SHOW_MORE_PLACEHOLDER);
-                }
-
-                comboBox.ItemsSource = displayHistory;
+                // 直接显示所有历史记录（最多20条）
+                comboBox.ItemsSource = new List<string>(history);
             }
             catch (Exception)
             {
@@ -288,18 +261,10 @@ namespace WriteRemark
                 SaveToHistory(comboBox, fieldName);
             };
 
-            // 选择项改变时处理"显示更多"
+            // 选择项改变时保存历史记录
             comboBox.SelectionChanged += (s, e) =>
             {
-                if (comboBox.SelectedItem is string selectedText && selectedText == SHOW_MORE_PLACEHOLDER)
-                {
-                    // 展开显示全部历史记录
-                    LoadHistory(comboBox, fieldName, showAll: true);
-                    comboBox.IsDropDownOpen = true;
-                    comboBox.SelectedIndex = -1;
-                    e.Handled = true;
-                }
-                else if (comboBox.SelectedItem != null && !string.IsNullOrWhiteSpace(comboBox.Text))
+                if (comboBox.SelectedItem != null && !string.IsNullOrWhiteSpace(comboBox.Text))
                 {
                     SaveToHistory(comboBox, fieldName);
                 }
@@ -345,30 +310,21 @@ namespace WriteRemark
                 SaveToHistory(comboBox, fieldName);
             };
 
-            // 选择项改变时处理
+            // 选择项改变时保存历史记录
             comboBox.SelectionChanged += (s, e) =>
             {
-                // 检查是否选择了"显示更多"
-                if (comboBox.SelectedItem is string selectedText && selectedText == SHOW_MORE_PLACEHOLDER)
-                {
-                    // 展开显示全部历史记录
-                    LoadHistory(comboBox, fieldName, showAll: true);
-                    comboBox.IsDropDownOpen = true;
-                    comboBox.SelectedIndex = -1; // 清除选择
-                    e.Handled = true;
-                }
-                else if (comboBox.SelectedItem != null && !string.IsNullOrWhiteSpace(comboBox.Text))
+                if (comboBox.SelectedItem != null && !string.IsNullOrWhiteSpace(comboBox.Text))
                 {
                     SaveToHistory(comboBox, fieldName);
                 }
             };
 
-            // 下拉时重新加载历史（默认显示5条）
+            // 下拉时重新加载历史
             comboBox.DropDownOpened += (s, e) =>
             {
                 if (string.IsNullOrWhiteSpace(comboBox.Text))
                 {
-                    LoadHistory(comboBox, fieldName, showAll: false);
+                    LoadHistory(comboBox, fieldName);
                 }
             };
         }
