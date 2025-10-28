@@ -550,7 +550,8 @@ namespace WriteRemark
                                         MessageBoxButton.OK,
                                         MessageBoxImage.Warning);
                                     comboBox.Focus();
-                                    comboBox.SelectAll();
+                                    var textBox = comboBox.Template?.FindName("PART_EditableTextBox", comboBox) as TextBox;
+                                    textBox?.SelectAll();
                                     return;
                                 }
                             }
