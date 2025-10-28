@@ -65,7 +65,7 @@ namespace WriteRemark
 
         private string _folderPath;
         private List<FolderFieldConfig> _fieldConfigs;
-        private Dictionary<string, TextBox> _textBoxes;
+        private Dictionary<string, ComboBox> _comboBoxes;
         private bool _isEditMode = false;
         private bool _isTopMost = true;
 
@@ -73,7 +73,7 @@ namespace WriteRemark
         {
             InitializeComponent();
             _folderPath = folderPath;
-            _textBoxes = new Dictionary<string, TextBox>();
+            _comboBoxes = new Dictionary<string, ComboBox>();
             this.Topmost = _isTopMost;
             
             // 设置文件夹路径显示
@@ -93,7 +93,7 @@ namespace WriteRemark
         {
             FieldsPanel.Children.Clear();
             HiddenFieldsPanel.Children.Clear();
-            _textBoxes.Clear();
+            _comboBoxes.Clear();
 
             var visibleFields = _fieldConfigs.Where(f => f.IsVisible).OrderBy(f => f.Order).ToList();
             var hiddenFields = _fieldConfigs.Where(f => !f.IsVisible).OrderBy(f => f.Order).ToList();
@@ -225,47 +225,34 @@ namespace WriteRemark
             Grid.SetColumn(label, colIndex++);
             grid.Children.Add(label);
 
-            // 输入框
-            TextBox textBox;
+            // 输入框 - 使用带历史记录的ComboBox
+            ComboBox comboBox;
             if (field.FieldName == "InfoTip")
             {
-                textBox = new TextBox
+                // 备注字段（InfoTip）
+                comboBox = new ComboBox
                 {
-                    Margin = new Thickness(5),
-                    TextWrapping = TextWrapping.Wrap,
-                    AcceptsReturn = true,
-                    VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
-                    MinHeight = 60
-                };
-            }
-            else
-            {
-                textBox = new TextBox
-                {
+                    IsEditable = true,
                     Margin = new Thickness(5),
                     VerticalAlignment = VerticalAlignment.Center
                 };
+                // 为InfoTip字段添加历史记录功能
+                HistoryComboBoxHelper.AttachHistoryFeature(comboBox, field.FieldName);
+            }
+            else
+            {
+                // 普通字段使用带历史记录的ComboBox
+                comboBox = HistoryComboBoxHelper.CreateHistoryComboBox(field.FieldName);
             }
 
             if (!string.IsNullOrEmpty(field.ToolTip))
             {
-                textBox.ToolTip = field.ToolTip;
+                comboBox.ToolTip = field.ToolTip;
             }
 
-            // 添加自动全选功能
-            textBox.GotFocus += (s, e) => textBox.SelectAll();
-            textBox.PreviewMouseLeftButtonDown += (s, e) =>
-            {
-                if (!textBox.IsKeyboardFocusWithin)
-                {
-                    textBox.Focus();
-                    e.Handled = true;
-                }
-            };
-
-            Grid.SetColumn(textBox, colIndex++);
-            grid.Children.Add(textBox);
-            _textBoxes[field.FieldName] = textBox;
+            Grid.SetColumn(comboBox, colIndex++);
+            grid.Children.Add(comboBox);
+            _comboBoxes[field.FieldName] = comboBox;
 
             // 关闭/恢复按钮
             if (_isEditMode && isVisible)
@@ -397,30 +384,30 @@ namespace WriteRemark
                 var folderInfo = FolderRemarkManager.ReadFolderRemark(_folderPath);
 
                 // 根据字段名加载对应的属性值
-                foreach (var kvp in _textBoxes)
+                foreach (var kvp in _comboBoxes)
                 {
                     string fieldName = kvp.Key;
-                    TextBox textBox = kvp.Value;
+                    ComboBox comboBox = kvp.Value;
 
                     switch (fieldName)
                     {
                         case "LocalizedResourceName":
-                            textBox.Text = folderInfo.LocalizedResourceName ?? "";
+                            comboBox.Text = folderInfo.LocalizedResourceName ?? "";
                             break;
                         case "InfoTip":
-                            textBox.Text = folderInfo.InfoTip ?? "";
+                            comboBox.Text = folderInfo.InfoTip ?? "";
                             break;
                         case "Prop2":
-                            textBox.Text = folderInfo.Prop2 ?? "";
+                            comboBox.Text = folderInfo.Prop2 ?? "";
                             break;
                         case "Prop3":
-                            textBox.Text = folderInfo.Prop3 ?? "";
+                            comboBox.Text = folderInfo.Prop3 ?? "";
                             break;
                         case "Prop4":
-                            textBox.Text = folderInfo.Prop4 ?? "";
+                            comboBox.Text = folderInfo.Prop4 ?? "";
                             break;
                         case "Prop5":
-                            textBox.Text = folderInfo.Prop5 ?? "";
+                            comboBox.Text = folderInfo.Prop5 ?? "";
                             break;
                     }
                 }
@@ -470,31 +457,38 @@ namespace WriteRemark
                 var folderInfo = new FolderInfo();
 
                 // 根据字段名保存对应的属性值
-                foreach (var kvp in _textBoxes)
+                foreach (var kvp in _comboBoxes)
                 {
                     string fieldName = kvp.Key;
-                    TextBox textBox = kvp.Value;
+                    ComboBox comboBox = kvp.Value;
+                    string text = comboBox.Text?.Trim() ?? "";
 
                     switch (fieldName)
                     {
                         case "LocalizedResourceName":
-                            folderInfo.LocalizedResourceName = textBox.Text;
+                            folderInfo.LocalizedResourceName = text;
                             break;
                         case "InfoTip":
-                            folderInfo.InfoTip = textBox.Text;
+                            folderInfo.InfoTip = text;
                             break;
                         case "Prop2":
-                            folderInfo.Prop2 = textBox.Text;
+                            folderInfo.Prop2 = text;
                             break;
                         case "Prop3":
-                            folderInfo.Prop3 = textBox.Text;
+                            folderInfo.Prop3 = text;
                             break;
                         case "Prop4":
-                            folderInfo.Prop4 = textBox.Text;
+                            folderInfo.Prop4 = text;
                             break;
                         case "Prop5":
-                            folderInfo.Prop5 = textBox.Text;
+                            folderInfo.Prop5 = text;
                             break;
+                    }
+
+                    // 保存到历史记录
+                    if (!string.IsNullOrWhiteSpace(text))
+                    {
+                        HistoryManager.AddOrUpdateHistory(fieldName, text);
                     }
                 }
 
@@ -639,14 +633,13 @@ namespace WriteRemark
             // 1. 将窗口置于屏幕中央
             this.WindowStartupLocation = WindowStartupLocation.CenterScreen;
 
-            // 2. 将焦点设置到第一个可见的 TextBox 上并全选
+            // 2. 将焦点设置到第一个可见的 ComboBox 上
             this.Dispatcher.BeginInvoke(new Action(() =>
             {
-                var firstVisibleTextBox = _textBoxes.Values.FirstOrDefault();
-                if (firstVisibleTextBox != null)
+                var firstVisibleComboBox = _comboBoxes.Values.FirstOrDefault();
+                if (firstVisibleComboBox != null)
                 {
-                    firstVisibleTextBox.Focus();
-                    firstVisibleTextBox.SelectAll();
+                    firstVisibleComboBox.Focus();
                 }
             }), System.Windows.Threading.DispatcherPriority.Input);
         }

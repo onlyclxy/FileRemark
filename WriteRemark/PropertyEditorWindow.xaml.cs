@@ -63,7 +63,7 @@ namespace WriteRemark
 
         private string _filePath;
         private List<FieldConfig> _fieldConfigs;
-        private Dictionary<string, TextBox> _textBoxes;
+        private Dictionary<string, ComboBox> _comboBoxes;
         private bool _isEditMode = false;
         private bool _isTopMost = true;
 
@@ -71,7 +71,7 @@ namespace WriteRemark
         {
             InitializeComponent();
             _filePath = filePath;
-            _textBoxes = new Dictionary<string, TextBox>();
+            _comboBoxes = new Dictionary<string, ComboBox>();
             this.Topmost = _isTopMost;
             
             // 设置文件路径显示
@@ -91,7 +91,7 @@ namespace WriteRemark
         {
             FieldsPanel.Children.Clear();
             HiddenFieldsPanel.Children.Clear();
-            _textBoxes.Clear();
+            _comboBoxes.Clear();
 
             var visibleFields = _fieldConfigs.Where(f => f.IsVisible).OrderBy(f => f.Order).ToList();
             var hiddenFields = _fieldConfigs.Where(f => !f.IsVisible).OrderBy(f => f.Order).ToList();
@@ -223,104 +223,89 @@ namespace WriteRemark
             Grid.SetColumn(label, colIndex++);
             grid.Children.Add(label);
 
-            // 输入框
-            TextBox textBox;
+            // 输入框 - 使用带历史记录的ComboBox
+            ComboBox comboBox;
             if (field.FieldName == "Comment")
             {
-                textBox = new TextBox
+                // 多行输入使用TextBox（ComboBox不适合多行）
+                comboBox = new ComboBox
                 {
-                    Margin = new Thickness(5),
-                    TextWrapping = TextWrapping.Wrap,
-                    AcceptsReturn = true,
-                    VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
-                    MinHeight = 60
-                };
-            }
-            else if (field.FieldName == "Rating")
-            {
-                // 分级字段 - 数字输入框
-                textBox = new TextBox
-                {
-                    Margin = new Thickness(5),
-                    VerticalAlignment = VerticalAlignment.Center,
-                    MaxLength = 3 // 最多3位数字
-                };
-                
-                // 添加数字输入限制
-                textBox.PreviewTextInput += (s, e) =>
-                {
-                    // 只允许数字输入
-                    e.Handled = !IsNumeric(e.Text);
-                };
-                
-                // 处理粘贴事件
-                textBox.PreviewKeyDown += (s, e) =>
-                {
-                    if (e.Key == Key.V && (Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control)
-                    {
-                        // 处理Ctrl+V粘贴
-                        var clipboardText = Clipboard.GetText();
-                        if (!string.IsNullOrEmpty(clipboardText) && IsValidRatingText(clipboardText))
-                        {
-                            textBox.Text = clipboardText;
-                            textBox.SelectAll();
-                        }
-                        e.Handled = true;
-                    }
-                };
-                
-                // 文本改变时验证范围
-                textBox.TextChanged += (s, e) =>
-                {
-                    var tb = s as TextBox;
-                    if (!string.IsNullOrEmpty(tb.Text))
-                    {
-                        if (int.TryParse(tb.Text, out int value))
-                        {
-                            if (value > 99)
-                            {
-                                // 如果超过100，截取到100
-                                tb.Text = "99";
-                                tb.SelectionStart = tb.Text.Length;
-                            }
-                            if (value <= 0)
-                            {
-                                // 如果小于等于0，设置为1
-                                tb.Text = "1";
-                                tb.SelectionStart = tb.Text.Length;
-                            }
-                        }
-                    }
-                };
-            }
-            else
-            {
-                textBox = new TextBox
-                {
+                    IsEditable = true,
                     Margin = new Thickness(5),
                     VerticalAlignment = VerticalAlignment.Center
                 };
+                // 为Comment字段添加历史记录功能
+                HistoryComboBoxHelper.AttachHistoryFeature(comboBox, field.FieldName);
+            }
+            else if (field.FieldName == "Rating")
+            {
+                // 分级字段 - 数字输入，带历史记录
+                comboBox = HistoryComboBoxHelper.CreateHistoryComboBox(field.FieldName);
+                comboBox.MaxLength = 3;
+
+                // 获取内部TextBox并添加数字输入限制
+                comboBox.Loaded += (s, e) =>
+                {
+                    var cb = s as ComboBox;
+                    cb.ApplyTemplate();
+                    var textBox = cb.Template?.FindName("PART_EditableTextBox", cb) as TextBox;
+                    if (textBox != null)
+                    {
+                        textBox.PreviewTextInput += (sender, args) =>
+                        {
+                            args.Handled = !IsNumeric(args.Text);
+                        };
+
+                        textBox.PreviewKeyDown += (sender, args) =>
+                        {
+                            if (args.Key == Key.V && (Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control)
+                            {
+                                var clipboardText = Clipboard.GetText();
+                                if (!string.IsNullOrEmpty(clipboardText) && IsValidRatingText(clipboardText))
+                                {
+                                    textBox.Text = clipboardText;
+                                    textBox.SelectAll();
+                                }
+                                args.Handled = true;
+                            }
+                        };
+                    }
+                };
+
+                // 文本改变时验证范围
+                comboBox.AddHandler(TextBox.TextChangedEvent, new TextChangedEventHandler((s, e) =>
+                {
+                    var cb = s as ComboBox;
+                    if (!string.IsNullOrEmpty(cb.Text))
+                    {
+                        if (int.TryParse(cb.Text, out int value))
+                        {
+                            if (value > 99)
+                            {
+                                cb.Text = "99";
+                            }
+                            else if (value <= 0)
+                            {
+                                cb.Text = "1";
+                            }
+                        }
+                    }
+                }));
+            }
+            else
+            {
+                // 普通字段使用带历史记录的ComboBox
+                comboBox = HistoryComboBoxHelper.CreateHistoryComboBox(field.FieldName);
             }
 
             if (!string.IsNullOrEmpty(field.ToolTip))
             {
-                textBox.ToolTip = field.ToolTip;
+                comboBox.ToolTip = field.ToolTip;
             }
 
-            // 添加自动全选功能
-            textBox.GotFocus += (s, e) => textBox.SelectAll();
-            textBox.PreviewMouseLeftButtonDown += (s, e) =>
-            {
-                if (!textBox.IsKeyboardFocusWithin)
-                {
-                    textBox.Focus();
-                    e.Handled = true;
-                }
-            };
-
-            Grid.SetColumn(textBox, colIndex++);
-            grid.Children.Add(textBox);
-            _textBoxes[field.FieldName] = textBox;
+            Grid.SetColumn(comboBox, colIndex++);
+            grid.Children.Add(comboBox);
+            _comboBoxes[field.FieldName] = comboBox;
 
             // 关闭/恢复按钮
             if (_isEditMode && isVisible)
@@ -452,36 +437,36 @@ namespace WriteRemark
                 var file = ShellFile.FromFilePath(_filePath);
 
                 // 根据字段名加载对应的属性值
-                foreach (var kvp in _textBoxes)
+                foreach (var kvp in _comboBoxes)
                 {
                     string fieldName = kvp.Key;
-                    TextBox textBox = kvp.Value;
+                    ComboBox comboBox = kvp.Value;
 
                     switch (fieldName)
                     {
                         case "Title":
-                            textBox.Text = file.Properties.System.Title.Value ?? "";
+                            comboBox.Text = file.Properties.System.Title.Value ?? "";
                             break;
                         case "Subject":
-                            textBox.Text = file.Properties.System.Subject.Value ?? "";
+                            comboBox.Text = file.Properties.System.Subject.Value ?? "";
                             break;
                         case "Rating":
-                            textBox.Text = file.Properties.System.Rating.Value?.ToString() ?? "";
+                            comboBox.Text = file.Properties.System.Rating.Value?.ToString() ?? "";
                             break;
                         case "Tags":
                             if (file.Properties.System.Keywords.Value != null)
                             {
-                                textBox.Text = string.Join(";", file.Properties.System.Keywords.Value);
+                                comboBox.Text = string.Join(";", file.Properties.System.Keywords.Value);
                             }
                             break;
                         case "Category":
                             if (file.Properties.System.Category.Value != null)
                             {
-                                textBox.Text = string.Join(";", file.Properties.System.Category.Value);
+                                comboBox.Text = string.Join(";", file.Properties.System.Category.Value);
                             }
                             break;
                         case "Comment":
-                            textBox.Text = file.Properties.System.Comment.Value ?? "";
+                            comboBox.Text = file.Properties.System.Comment.Value ?? "";
                             break;
                     }
                 }
@@ -531,14 +516,14 @@ namespace WriteRemark
                 var file = ShellFile.FromFilePath(_filePath);
 
                 // 根据字段名保存对应的属性值
-                foreach (var kvp in _textBoxes)
+                foreach (var kvp in _comboBoxes)
                 {
                     string fieldName = kvp.Key;
-                    TextBox textBox = kvp.Value;
+                    ComboBox comboBox = kvp.Value;
 
                     // 清理输入内容：去掉末尾的空行和空白字符
-                    string cleanText = (textBox.Text ?? "").TrimEnd('\r', '\n', ' ', '\t');
-                    
+                    string cleanText = (comboBox.Text ?? "").TrimEnd('\r', '\n', ' ', '\t');
+
                     switch (fieldName)
                     {
                         case "Title":
@@ -558,8 +543,7 @@ namespace WriteRemark
                                 else
                                 {
                                     MessageBox.Show("\"分级\"必须是 1-99 之间的数字。", "输入无效", MessageBoxButton.OK, MessageBoxImage.Warning);
-                                    textBox.Focus();
-                                    textBox.SelectAll();
+                                    comboBox.Focus();
                                     return;
                                 }
                             }
@@ -581,6 +565,12 @@ namespace WriteRemark
                         case "Comment":
                             file.Properties.System.Comment.Value = cleanText;
                             break;
+                    }
+
+                    // 保存到历史记录
+                    if (!string.IsNullOrWhiteSpace(cleanText))
+                    {
+                        HistoryManager.AddOrUpdateHistory(fieldName, cleanText);
                     }
                 }
 
@@ -714,14 +704,13 @@ namespace WriteRemark
             // 1. 将窗口置于屏幕中央
             this.WindowStartupLocation = WindowStartupLocation.CenterScreen;
 
-            // 2. 将焦点设置到第一个可见的 TextBox 上并全选
+            // 2. 将焦点设置到第一个可见的 ComboBox 上
             this.Dispatcher.BeginInvoke(new Action(() =>
             {
-                var firstVisibleTextBox = _textBoxes.Values.FirstOrDefault();
-                if (firstVisibleTextBox != null)
+                var firstVisibleComboBox = _comboBoxes.Values.FirstOrDefault();
+                if (firstVisibleComboBox != null)
                 {
-                    firstVisibleTextBox.Focus();
-                    firstVisibleTextBox.SelectAll();
+                    firstVisibleComboBox.Focus();
                 }
             }), System.Windows.Threading.DispatcherPriority.Input);
         }
