@@ -70,12 +70,24 @@ namespace WriteRemark
         public PropertyEditorWindow(string filePath)
         {
             InitializeComponent();
+            
+            // 设置窗口标题（包含版本号）
+            this.Title = $"编辑文件属性 - v{AppVersion.Version}";
+            
             _filePath = filePath;
             _comboBoxes = new Dictionary<string, ComboBox>();
             this.Topmost = _isTopMost;
             
             // 设置文件路径显示
             txtFilePath.Text = filePath;
+            
+            // 在后台预加载所有字段的历史记录
+            System.Threading.Tasks.Task.Run(() =>
+            {
+                HistoryComboBoxHelper.PreloadMultipleHistory(
+                    "Title", "Subject", "Rating", "Tags", "Category", "Comment"
+                );
+            });
             
             LoadFieldConfigs();
             CreateDynamicFields();

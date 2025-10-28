@@ -350,14 +350,38 @@
                                     </DataGridTextColumn>
 
                                     <!-- 标题 -->
-                                    <DataGridTextColumn Header="标题" Binding="{Binding Title, UpdateSourceTrigger=PropertyChanged}"
-                                                        Width="150" CellStyle="{StaticResource ErrorCellStyle}"
-                                                        HeaderStyle="{StaticResource BlueHeader}"/>
+                                    <DataGridTemplateColumn Header="标题" Width="150" HeaderStyle="{StaticResource BlueHeader}">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding Title}" TextTrimming="CharacterEllipsis"/>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                        <DataGridTemplateColumn.CellEditingTemplate>
+                                            <DataTemplate>
+                                                <ComboBox Text="{Binding Title, UpdateSourceTrigger=LostFocus}" 
+                                                          IsEditable="True" 
+                                                          Tag="Title"
+                                                          Loaded="HistoryComboBox_Loaded"/>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellEditingTemplate>
+                                    </DataGridTemplateColumn>
 
                                     <!-- 主题 -->
-                                    <DataGridTextColumn Header="主题" Binding="{Binding Subject, UpdateSourceTrigger=PropertyChanged}"
-                                                        Width="150" CellStyle="{StaticResource ErrorCellStyle}"
-                                                        HeaderStyle="{StaticResource PurpleHeader}"/>
+                                    <DataGridTemplateColumn Header="主题" Width="150" HeaderStyle="{StaticResource PurpleHeader}">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding Subject}" TextTrimming="CharacterEllipsis"/>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                        <DataGridTemplateColumn.CellEditingTemplate>
+                                            <DataTemplate>
+                                                <ComboBox Text="{Binding Subject, UpdateSourceTrigger=LostFocus}" 
+                                                          IsEditable="True" 
+                                                          Tag="Subject"
+                                                          Loaded="HistoryComboBox_Loaded"/>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellEditingTemplate>
+                                    </DataGridTemplateColumn>
 
                                     <!-- 分级 -->
                                     <DataGridTemplateColumn Header="分级" Width="80" HeaderStyle="{StaticResource OrangeHeader}">
@@ -376,31 +400,57 @@
                                     </DataGridTemplateColumn>
 
                                     <!-- 标记 -->
-                                    <DataGridTextColumn Header="标记" Binding="{Binding Tags, UpdateSourceTrigger=PropertyChanged}"
-                                                        Width="180" CellStyle="{StaticResource ErrorCellStyle}"
-                                                        HeaderStyle="{StaticResource GreenHeader}">
-                                        <DataGridTextColumn.ElementStyle>
-                                            <Style TargetType="TextBlock">
-                                                <Setter Property="ToolTip" Value="多个标记用 ; 分隔"/>
-                                            </Style>
-                                        </DataGridTextColumn.ElementStyle>
-                                    </DataGridTextColumn>
+                                    <DataGridTemplateColumn Header="标记" Width="180" HeaderStyle="{StaticResource GreenHeader}">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding Tags}" TextTrimming="CharacterEllipsis" ToolTip="多个标记用 ; 分隔"/>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                        <DataGridTemplateColumn.CellEditingTemplate>
+                                            <DataTemplate>
+                                                <ComboBox Text="{Binding Tags, UpdateSourceTrigger=LostFocus}" 
+                                                          IsEditable="True" 
+                                                          Tag="Tags"
+                                                          ToolTip="多个标记用 ; 分隔"
+                                                          Loaded="HistoryComboBox_Loaded"/>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellEditingTemplate>
+                                    </DataGridTemplateColumn>
 
                                     <!-- 类别 -->
-                                    <DataGridTextColumn Header="类别" Binding="{Binding Category, UpdateSourceTrigger=PropertyChanged}"
-                                                        Width="180" CellStyle="{StaticResource ErrorCellStyle}"
-                                                        HeaderStyle="{StaticResource CyanHeader}">
-                                        <DataGridTextColumn.ElementStyle>
-                                            <Style TargetType="TextBlock">
-                                                <Setter Property="ToolTip" Value="多个类别用 ; 分隔"/>
-                                            </Style>
-                                        </DataGridTextColumn.ElementStyle>
-                                    </DataGridTextColumn>
+                                    <DataGridTemplateColumn Header="类别" Width="180" HeaderStyle="{StaticResource CyanHeader}">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding Category}" TextTrimming="CharacterEllipsis" ToolTip="多个类别用 ; 分隔"/>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                        <DataGridTemplateColumn.CellEditingTemplate>
+                                            <DataTemplate>
+                                                <ComboBox Text="{Binding Category, UpdateSourceTrigger=LostFocus}" 
+                                                          IsEditable="True" 
+                                                          Tag="Category"
+                                                          ToolTip="多个类别用 ; 分隔"
+                                                          Loaded="HistoryComboBox_Loaded"/>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellEditingTemplate>
+                                    </DataGridTemplateColumn>
 
                                     <!-- 备注 -->
-                                    <DataGridTextColumn Header="备注" Binding="{Binding Comment, UpdateSourceTrigger=PropertyChanged}"
-                                                        Width="*" MinWidth="200" CellStyle="{StaticResource ErrorCellStyle}"
-                                                        HeaderStyle="{StaticResource DarkGrayHeader}"/>
+                                    <DataGridTemplateColumn Header="备注" Width="*" MinWidth="200" HeaderStyle="{StaticResource DarkGrayHeader}">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding Comment}" TextTrimming="CharacterEllipsis"/>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                        <DataGridTemplateColumn.CellEditingTemplate>
+                                            <DataTemplate>
+                                                <ComboBox Text="{Binding Comment, UpdateSourceTrigger=LostFocus}" 
+                                                          IsEditable="True" 
+                                                          Tag="Comment"
+                                                          Loaded="HistoryComboBox_Loaded"/>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellEditingTemplate>
+                                    </DataGridTemplateColumn>
                                 </DataGrid.Columns>
                             </DataGrid>
                         </Border>
@@ -512,40 +562,107 @@
                                     </DataGridTextColumn>
 
                                     <!-- 别名 (LocalizedResourceName) -->
-                                    <DataGridTextColumn Header="别名" Binding="{Binding Alias, UpdateSourceTrigger=PropertyChanged}"
-                                                        Width="150" CellStyle="{StaticResource ErrorCellStyle}"
-                                                        HeaderStyle="{StaticResource BlueHeader}"/>
+                                    <DataGridTemplateColumn Header="别名" Width="150" HeaderStyle="{StaticResource BlueHeader}">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding Alias}" TextTrimming="CharacterEllipsis"/>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                        <DataGridTemplateColumn.CellEditingTemplate>
+                                            <DataTemplate>
+                                                <ComboBox Text="{Binding Alias, UpdateSourceTrigger=LostFocus}" 
+                                                          IsEditable="True" 
+                                                          Tag="LocalizedResourceName"
+                                                          Loaded="HistoryComboBox_Loaded"/>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellEditingTemplate>
+                                    </DataGridTemplateColumn>
 
                                     <!-- 备注 (InfoTip) -->
-                                    <DataGridTextColumn Header="备注" Binding="{Binding InfoTip, UpdateSourceTrigger=PropertyChanged}"
-                                                        Width="*" MinWidth="200" CellStyle="{StaticResource ErrorCellStyle}"
-                                                        HeaderStyle="{StaticResource DarkGrayHeader}"/>
+                                    <DataGridTemplateColumn Header="备注" Width="*" MinWidth="200" HeaderStyle="{StaticResource DarkGrayHeader}">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding InfoTip}" TextTrimming="CharacterEllipsis"/>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                        <DataGridTemplateColumn.CellEditingTemplate>
+                                            <DataTemplate>
+                                                <ComboBox Text="{Binding InfoTip, UpdateSourceTrigger=LostFocus}" 
+                                                          IsEditable="True" 
+                                                          Tag="InfoTip"
+                                                          Loaded="HistoryComboBox_Loaded"/>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellEditingTemplate>
+                                    </DataGridTemplateColumn>
 
                                     <!-- 标题 (Prop2) -->
-                                    <DataGridTextColumn Header="标题" Binding="{Binding Title, UpdateSourceTrigger=PropertyChanged}"
-                                                        Width="150" CellStyle="{StaticResource ErrorCellStyle}"
-                                                        HeaderStyle="{StaticResource PurpleHeader}"/>
+                                    <DataGridTemplateColumn Header="标题" Width="150" HeaderStyle="{StaticResource PurpleHeader}">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding Title}" TextTrimming="CharacterEllipsis"/>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                        <DataGridTemplateColumn.CellEditingTemplate>
+                                            <DataTemplate>
+                                                <ComboBox Text="{Binding Title, UpdateSourceTrigger=LostFocus}" 
+                                                          IsEditable="True" 
+                                                          Tag="Prop2"
+                                                          Loaded="HistoryComboBox_Loaded"/>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellEditingTemplate>
+                                    </DataGridTemplateColumn>
 
                                     <!-- 主题 (Prop3) -->
-                                    <DataGridTextColumn Header="主题" Binding="{Binding Subject, UpdateSourceTrigger=PropertyChanged}"
-                                                        Width="150" CellStyle="{StaticResource ErrorCellStyle}"
-                                                        HeaderStyle="{StaticResource OrangeHeader}"/>
+                                    <DataGridTemplateColumn Header="主题" Width="150" HeaderStyle="{StaticResource OrangeHeader}">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding Subject}" TextTrimming="CharacterEllipsis"/>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                        <DataGridTemplateColumn.CellEditingTemplate>
+                                            <DataTemplate>
+                                                <ComboBox Text="{Binding Subject, UpdateSourceTrigger=LostFocus}" 
+                                                          IsEditable="True" 
+                                                          Tag="Prop3"
+                                                          Loaded="HistoryComboBox_Loaded"/>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellEditingTemplate>
+                                    </DataGridTemplateColumn>
 
                                     <!-- 作者 (Prop4) -->
-                                    <DataGridTextColumn Header="作者" Binding="{Binding Author, UpdateSourceTrigger=PropertyChanged}"
-                                                        Width="120" CellStyle="{StaticResource ErrorCellStyle}"
-                                                        HeaderStyle="{StaticResource RedHeader}"/>
+                                    <DataGridTemplateColumn Header="作者" Width="120" HeaderStyle="{StaticResource RedHeader}">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding Author}" TextTrimming="CharacterEllipsis"/>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                        <DataGridTemplateColumn.CellEditingTemplate>
+                                            <DataTemplate>
+                                                <ComboBox Text="{Binding Author, UpdateSourceTrigger=LostFocus}" 
+                                                          IsEditable="True" 
+                                                          Tag="Prop4"
+                                                          Loaded="HistoryComboBox_Loaded"/>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellEditingTemplate>
+                                    </DataGridTemplateColumn>
 
                                     <!-- 标记 (Prop5) -->
-                                    <DataGridTextColumn Header="标记" Binding="{Binding Tags, UpdateSourceTrigger=PropertyChanged}"
-                                                        Width="180" CellStyle="{StaticResource ErrorCellStyle}"
-                                                        HeaderStyle="{StaticResource GreenHeader}">
-                                        <DataGridTextColumn.ElementStyle>
-                                            <Style TargetType="TextBlock">
-                                                <Setter Property="ToolTip" Value="多个标记用 ; 分隔"/>
-                                            </Style>
-                                        </DataGridTextColumn.ElementStyle>
-                                    </DataGridTextColumn>
+                                    <DataGridTemplateColumn Header="标记" Width="180" HeaderStyle="{StaticResource GreenHeader}">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding Tags}" TextTrimming="CharacterEllipsis" ToolTip="多个标记用 ; 分隔"/>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                        <DataGridTemplateColumn.CellEditingTemplate>
+                                            <DataTemplate>
+                                                <ComboBox Text="{Binding Tags, UpdateSourceTrigger=LostFocus}" 
+                                                          IsEditable="True" 
+                                                          Tag="Prop5"
+                                                          ToolTip="多个标记用 ; 分隔"
+                                                          Loaded="HistoryComboBox_Loaded"/>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellEditingTemplate>
+                                    </DataGridTemplateColumn>
                                     </DataGrid.Columns>
                                 </DataGrid>
                             </Border>

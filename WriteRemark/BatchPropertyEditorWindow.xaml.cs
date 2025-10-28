@@ -68,6 +68,10 @@ namespace WriteRemark
         public BatchPropertyEditorWindow(List<string> paths)
         {
             InitializeComponent();
+            
+            // 设置窗口标题（包含版本号）
+            this.Title = $"批量编辑属性 - v{AppVersion.Version}";
+            
             this.Topmost = _isTopMost;
 
             // 分离文件和文件夹
@@ -226,19 +230,55 @@ namespace WriteRemark
         /// </summary>
         private void InitializeBatchOperationHistory()
         {
-            // 为文件批量操作输入框添加历史记录功能
-            if (cmbBatchFieldFile.SelectedItem is ComboBoxItem selectedFileItem)
+            // 在后台预加载所有字段的历史记录（一次性加载，避免切换时卡顿）
+            System.Threading.Tasks.Task.Run(() =>
             {
-                string fieldName = GetHistoryFieldNameForFile(selectedFileItem.Content.ToString());
-                HistoryComboBoxHelper.AttachHistoryFeature(txtBatchValueFile, fieldName);
-            }
+                try
+                {
+                    // 预加载文件字段的历史记录
+                    HistoryComboBoxHelper.PreloadMultipleHistory(
+                        "Title",      // 标题
+                        "Subject",    // 主题
+                        "Rating",     // 分级
+                        "Tags",       // 标记
+                        "Category",   // 类别
+                        "Comment"     // 备注
+                    );
 
-            // 为文件夹批量操作输入框添加历史记录功能
-            if (cmbBatchFieldFolder.SelectedItem is ComboBoxItem selectedFolderItem)
-            {
-                string fieldName = GetHistoryFieldNameForFolder(selectedFolderItem.Content.ToString());
-                HistoryComboBoxHelper.AttachHistoryFeature(txtBatchValueFolder, fieldName);
-            }
+                    // 预加载文件夹字段的历史记录
+                    HistoryComboBoxHelper.PreloadMultipleHistory(
+                        "LocalizedResourceName",  // 别名
+                        "InfoTip",                // 备注
+                        "Prop2",                  // 标题
+                        "Prop3",                  // 主题
+                        "Prop4",                  // 作者
+                        "Prop5"                   // 标记
+                    );
+
+                    // 预加载完成后，在UI线程中初始化ComboBox
+                    this.Dispatcher.BeginInvoke(new Action(() =>
+                    {
+                        // 为文件批量操作输入框添加历史记录功能
+                        if (cmbBatchFieldFile.SelectedItem is ComboBoxItem selectedFileItem)
+                        {
+                            string fieldName = GetHistoryFieldNameForFile(selectedFileItem.Content.ToString());
+                            HistoryComboBoxHelper.AttachHistoryFeature(txtBatchValueFile, fieldName);
+                        }
+
+                        // 为文件夹批量操作输入框添加历史记录功能
+                        if (cmbBatchFieldFolder.SelectedItem is ComboBoxItem selectedFolderItem)
+                        {
+                            string fieldName = GetHistoryFieldNameForFolder(selectedFolderItem.Content.ToString());
+                            HistoryComboBoxHelper.AttachHistoryFeature(txtBatchValueFolder, fieldName);
+                        }
+                    }));
+                }
+                catch (Exception ex)
+                {
+                    // 预加载失败不影响主要功能
+                    System.Diagnostics.Debug.WriteLine($"预加载历史记录失败: {ex.Message}");
+                }
+            });
         }
 
         /// <summary>
@@ -248,6 +288,7 @@ namespace WriteRemark
         {
             if (cmbBatchFieldFile.SelectedItem is ComboBoxItem selectedItem && txtBatchValueFile != null)
             {
+                // 由于已经预加载了所有字段，切换时直接加载即可，无需延迟
                 string fieldName = GetHistoryFieldNameForFile(selectedItem.Content.ToString());
                 HistoryComboBoxHelper.AttachHistoryFeature(txtBatchValueFile, fieldName);
                 txtBatchValueFile.Text = ""; // 清空输入
@@ -261,6 +302,7 @@ namespace WriteRemark
         {
             if (cmbBatchFieldFolder.SelectedItem is ComboBoxItem selectedItem && txtBatchValueFolder != null)
             {
+                // 由于已经预加载了所有字段，切换时直接加载即可，无需延迟
                 string fieldName = GetHistoryFieldNameForFolder(selectedItem.Content.ToString());
                 HistoryComboBoxHelper.AttachHistoryFeature(txtBatchValueFolder, fieldName);
                 txtBatchValueFolder.Text = ""; // 清空输入
@@ -1931,6 +1973,26 @@ namespace WriteRemark
                     dgFolders.Columns[i + 1], // +1 跳过选择框列
                     columns[i]
                 ));
+            }
+        }
+
+        #endregion
+
+        #region DataGrid 历史记录支持
+
+        /// <summary>
+        /// DataGrid 中 ComboBox 加载时，使用超轻量级方法快速加载历史记录
+        /// 避免卡顿：只从缓存加载 + 最小化事件绑定
+        /// </summary>
+        private void HistoryComboBox_Loaded(object sender, RoutedEventArgs e)
+        {
+            if (sender is ComboBox comboBox && comboBox.Tag is string fieldName)
+            {
+                // 1. 从缓存快速加载历史记录（不查询数据库）
+                HistoryComboBoxHelper.QuickLoadFromCache(comboBox, fieldName);
+                
+                // 2. 绑定最基本的事件（不绑定TextChanged，避免遍历Visual Tree）
+                HistoryComboBoxHelper.AttachMinimalEvents(comboBox, fieldName);
             }
         }
 

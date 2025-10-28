@@ -72,12 +72,24 @@ namespace WriteRemark
         public FolderPropertyEditorWindow(string folderPath)
         {
             InitializeComponent();
+            
+            // 设置窗口标题（包含版本号）
+            this.Title = $"编辑文件夹属性 - v{AppVersion.Version}";
+            
             _folderPath = folderPath;
             _comboBoxes = new Dictionary<string, ComboBox>();
             this.Topmost = _isTopMost;
             
             // 设置文件夹路径显示
             txtFolderPath.Text = folderPath;
+            
+            // 在后台预加载所有字段的历史记录
+            System.Threading.Tasks.Task.Run(() =>
+            {
+                HistoryComboBoxHelper.PreloadMultipleHistory(
+                    "LocalizedResourceName", "InfoTip", "Prop2", "Prop3", "Prop4", "Prop5"
+                );
+            });
             
             LoadFieldConfigs();
             CreateDynamicFields();
