@@ -1475,9 +1475,6 @@ namespace WriteRemark
             // 显示进度
             progressPanel.Visibility = Visibility.Visible;
 
-            // 立即启动动画（不等待，让它在后台播放）
-            var animationTask = AnimationHelper.AnimateSlideDownFadeOut(this, 0.6);
-
             // 整个保存过程放到后台线程执行，完全不阻塞 UI
             var saveTask = Task.Run(async () =>
             {
@@ -1546,29 +1543,27 @@ namespace WriteRemark
             // 等待保存完成
             var (success, failed, errors) = await saveTask;
 
-            // 等待动画完成
-            await animationTask;
-
             // 隐藏进度
             progressPanel.Visibility = Visibility.Collapsed;
 
-            // 显示结果并关闭窗口
+            // 恢复按钮
+            btnSaveAll.IsEnabled = true;
+            btnSaveSelected.IsEnabled = true;
+            btnCancel.IsEnabled = true;
+
+            // 更新修改计数
+            UpdateModifiedCount();
+
+            // 显示结果
             if (failed == 0)
             {
-                // 成功保存，直接关闭窗口
-                this.DialogResult = true;
-                this.Close();
+                // 成功保存，只提示不关闭
+                MessageBox.Show($"保存成功！\n\n共保存 {success} 个项目。", 
+                    "保存成功", MessageBoxButton.OK, MessageBoxImage.Information);
             }
             else
             {
-                // 有错误，恢复窗口显示
-                this.Opacity = 1.0;
-                this.RenderTransform = null;
-                btnSaveAll.IsEnabled = true;
-                btnSaveSelected.IsEnabled = true;
-                btnCancel.IsEnabled = true;
-
-                // 显示结果
+                // 有错误，显示详情
                 string message = $"保存完成!\n成功: {success} 个\n失败: {failed} 个";
                 if (errors.Any())
                 {

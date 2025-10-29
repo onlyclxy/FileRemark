@@ -24,6 +24,12 @@ namespace WriteRemark
 
             try
             {
+                // 保存原始背景
+                var originalBackground = window.Background;
+                
+                // 设置白色背景，防止出现黑窗口
+                window.Background = new SolidColorBrush(Colors.White);
+                
                 // 创建 Storyboard
                 var storyboard = new Storyboard();
 
@@ -34,7 +40,7 @@ namespace WriteRemark
                 var slideAnimation = new DoubleAnimation
                 {
                     From = 0,
-                    To = 100, // 向下移动100像素
+                    To = 50, // 向下移动50像素（减少移动距离，避免黑窗口）
                     Duration = new Duration(TimeSpan.FromSeconds(duration)),
                     EasingFunction = new CubicEase { EasingMode = EasingMode.EaseIn }
                 };
@@ -59,6 +65,8 @@ namespace WriteRemark
                 // 动画完成事件
                 storyboard.Completed += (s, e) =>
                 {
+                    // 恢复原始背景
+                    window.Background = originalBackground;
                     tcs.SetResult(true);
                 };
 

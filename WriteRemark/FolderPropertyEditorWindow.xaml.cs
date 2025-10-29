@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -462,20 +463,32 @@ namespace WriteRemark
             LoadProperties();
         }
 
-        private void BtnSave_Click(object sender, RoutedEventArgs e)
+        private async void BtnSave_Click(object sender, RoutedEventArgs e)
         {
+            // 禁用按钮，防止重复点击
+            btnSave.IsEnabled = false;
+            
             try
             {
-                var folderInfo = new FolderInfo();
-
-                // 根据字段名保存对应的属性值
-                foreach (var kvp in _comboBoxes)
+                // 在后台线程执行保存操作
+                string result = await Task.Run(() =>
                 {
-                    string fieldName = kvp.Key;
-                    ComboBox comboBox = kvp.Value;
-                    string text = comboBox.Text?.Trim() ?? "";
+                    var folderInfo = new FolderInfo();
 
-                    switch (fieldName)
+                    // 根据字段名保存对应的属性值
+                    foreach (var kvp in _comboBoxes)
+                    {
+                        string fieldName = kvp.Key;
+                        string text = null;
+
+                        // 在 UI 线程获取 ComboBox 的值
+                        Dispatcher.Invoke(() =>
+                        {
+                            ComboBox comboBox = kvp.Value;
+                            text = comboBox.Text?.Trim() ?? "";
+                        });
+
+                        switch (fieldName)
                     {
                         case "LocalizedResourceName":
                             folderInfo.LocalizedResourceName = text;
@@ -497,15 +510,16 @@ namespace WriteRemark
                             break;
                     }
 
-                    // 保存到历史记录
-                    if (!string.IsNullOrWhiteSpace(text))
-                    {
-                        HistoryManager.AddOrUpdateHistory(fieldName, text);
+                        // 保存到历史记录
+                        if (!string.IsNullOrWhiteSpace(text))
+                        {
+                            HistoryManager.AddOrUpdateHistory(fieldName, text);
+                        }
                     }
-                }
 
-                // 使用提供的写入方法
-                string result = FolderRemarkManager.WriteFolderRemark(_folderPath, folderInfo);
+                    // 使用提供的写入方法
+                    return FolderRemarkManager.WriteFolderRemark(_folderPath, folderInfo);
+                });
 
                 if (result.Contains("成功"))
                 {
@@ -521,6 +535,10 @@ namespace WriteRemark
             {
                 MessageBox.Show($"保存文件夹属性时出错: {ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
                 this.DialogResult = false;
+            }
+            finally
+            {
+                btnSave.IsEnabled = true;
             }
             this.Close();
         }

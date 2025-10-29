@@ -11,7 +11,7 @@ namespace WriteRemark
         /// 当前版本号
         /// 格式: 主版本.次版本.修订号
         /// </summary>
-        public const string Version = "1.0.7";
+        public const string Version = "1.0.9";
 
         /// <summary>
         /// 版本发布日期
@@ -22,6 +22,17 @@ namespace WriteRemark
         /// 版本更新日志
         /// </summary>
         public const string ChangeLog = @"
+v1.0.9 (2025-10-29)
+- [修复] 批量保存完全移除动画, 直接保存不关闭窗口
+- [简化] 保存流程更直接, 只显示进度条
+
+v1.0.8 (2025-10-29)
+- [修复] 修复动画黑窗口问题: 设置白色背景, 减少移动距离
+- [修复] 所有窗口保存操作改为真正异步, 不阻塞 UI
+- [优化] 批量保存成功后不自动关闭窗口, 让用户决定
+- [美化] 移除小UI标题的加粗字体
+- [优化] 动画时长缩短至0.5秒, 延迟100ms显示进度条
+
 v1.0.7 (2025-10-29)
 - [修复] 修复保存操作阻塞 UI 的问题: 整个保存过程真正异步化
 - [优化] 使用 Task.Run + Dispatcher.BeginInvoke 实现非阻塞保存

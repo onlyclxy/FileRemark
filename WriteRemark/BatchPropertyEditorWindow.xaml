@@ -709,9 +709,7 @@
 
             <Separator Margin="10,0" Width="2"/>
 
-            <Button x:Name="btnDiagnostics" Content="历史诊断" Width="100" Margin="5,0"
-                    Style="{StaticResource SecondaryButton}" Click="BtnDiagnostics_Click"
-                    ToolTip="检查历史记录功能是否正常"/>
+
 
             <Separator Margin="10,0" Width="2"/>
 

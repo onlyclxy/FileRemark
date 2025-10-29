@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -528,22 +529,33 @@ namespace WriteRemark
             HistoryDiagnostics.ShowDiagnostics();
         }
 
-        private void BtnSave_Click(object sender, RoutedEventArgs e)
+        private async void BtnSave_Click(object sender, RoutedEventArgs e)
         {
+            // 禁用按钮，防止重复点击
+            btnSave.IsEnabled = false;
+            
             try
             {
-                var file = ShellFile.FromFilePath(_filePath);
-
-                // 根据字段名保存对应的属性值
-                foreach (var kvp in _comboBoxes)
+                // 在后台线程执行保存操作
+                await Task.Run(() =>
                 {
-                    string fieldName = kvp.Key;
-                    ComboBox comboBox = kvp.Value;
+                    var file = ShellFile.FromFilePath(_filePath);
 
-                    // 清理输入内容：去掉末尾的空行和空白字符
-                    string cleanText = (comboBox.Text ?? "").TrimEnd('\r', '\n', ' ', '\t');
+                    // 根据字段名保存对应的属性值
+                    foreach (var kvp in _comboBoxes)
+                    {
+                        string fieldName = kvp.Key;
+                        ComboBox comboBox = null;
+                        string cleanText = null;
 
-                    switch (fieldName)
+                        // 在 UI 线程获取 ComboBox 的值
+                        Dispatcher.Invoke(() =>
+                        {
+                            comboBox = kvp.Value;
+                            cleanText = (comboBox.Text ?? "").TrimEnd('\r', '\n', ' ', '\t');
+                        });
+
+                        switch (fieldName)
                     {
                         case "Title":
                             file.Properties.System.Title.Value = cleanText;
@@ -566,9 +578,12 @@ namespace WriteRemark
                                         "输入无效",
                                         MessageBoxButton.OK,
                                         MessageBoxImage.Warning);
-                                    comboBox.Focus();
-                                    var textBox = comboBox.Template?.FindName("PART_EditableTextBox", comboBox) as TextBox;
-                                    textBox?.SelectAll();
+                                    Dispatcher.Invoke(() =>
+                                    {
+                                        comboBox.Focus();
+                                        var textBox = comboBox.Template?.FindName("PART_EditableTextBox", comboBox) as TextBox;
+                                        textBox?.SelectAll();
+                                    });
                                     return;
                                 }
                             }
@@ -590,14 +605,15 @@ namespace WriteRemark
                         case "Comment":
                             file.Properties.System.Comment.Value = cleanText;
                             break;
-                    }
+                        }
 
-                    // 保存到历史记录
-                    if (!string.IsNullOrWhiteSpace(cleanText))
-                    {
-                        HistoryManager.AddOrUpdateHistory(fieldName, cleanText);
+                        // 保存到历史记录
+                        if (!string.IsNullOrWhiteSpace(cleanText))
+                        {
+                            HistoryManager.AddOrUpdateHistory(fieldName, cleanText);
+                        }
                     }
-                }
+                });
 
                 this.DialogResult = true;
             }
@@ -605,6 +621,10 @@ namespace WriteRemark
             {
                 MessageBox.Show($"保存文件属性时出错: {ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
                 this.DialogResult = false;
+            }
+            finally
+            {
+                btnSave.IsEnabled = true;
             }
             this.Close();
         }

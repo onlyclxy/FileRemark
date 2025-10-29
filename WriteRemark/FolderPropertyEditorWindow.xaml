@@ -151,7 +151,7 @@
             <StackPanel>
                 <!-- 标题行 -->
                 <Grid>
-                    <TextBlock Text="文件夹备注" FontSize="18" FontWeight="Bold" 
+                    <TextBlock Text="文件夹备注" FontSize="18" 
                                VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="#FF333333" />
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
                         <Button x:Name="btnTopMost" Width="22" Height="22" Click="BtnTopMost_Click" 
