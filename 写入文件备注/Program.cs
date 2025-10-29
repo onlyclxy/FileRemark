@@ -76,36 +76,23 @@ class Program
 
     /// <summary>
     /// 清理路径列表（去除引号、前后空格等）
-    /// 支持多行路径输入：如果参数中包含换行符，会按行分割
+    /// 全部按行分割：每一行作为一个路径，即使行内有空格也不分割
     /// </summary>
     static List<string> CleanPaths(List<string> paths)
     {
         var cleanedPaths = new List<string>();
 
-        foreach (var path in paths)
-        {
-            if (string.IsNullOrWhiteSpace(path))
-                continue;
+        // 将所有参数合并成一个字符串
+        string combined = string.Join(" ", paths);
 
-            // 检查是否包含换行符（多行路径）
-            if (path.Contains("\n") || path.Contains("\r"))
-            {
-                // 按行分割，每一行是一个路径
-                var lines = path.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
-                foreach (var line in lines)
-                {
-                    string cleaned = CleanSinglePath(line);
-                    if (!string.IsNullOrWhiteSpace(cleaned))
-                        cleanedPaths.Add(cleaned);
-                }
-            }
-            else
-            {
-                // 单行路径
-                string cleaned = CleanSinglePath(path);
-                if (!string.IsNullOrWhiteSpace(cleaned))
-                    cleanedPaths.Add(cleaned);
-            }
+        // 按行分割，每一行是一个路径
+        var lines = combined.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+        
+        foreach (var line in lines)
+        {
+            string cleaned = CleanSinglePath(line);
+            if (!string.IsNullOrWhiteSpace(cleaned))
+                cleanedPaths.Add(cleaned);
         }
 
         return cleanedPaths;
