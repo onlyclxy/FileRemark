@@ -5,7 +5,7 @@
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{C7D4E689-6C7A-4FCB-B08E-40B55D6C350C}</ProjectGuid>
-    <OutputType>WinExe</OutputType>
+    <OutputType>Exe</OutputType>
     <RootNamespace>写入文件备注</RootNamespace>
     <AssemblyName>写入文件备注</AssemblyName>
     <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
